@@ -1,0 +1,108 @@
+﻿@model webBanThucPham.Models.Tintuc
+
+@{
+    ViewData["Title"] = "Thêm tin tức";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="text-center mb-4">Thêm tin tức</h2>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Tiêu đề</label>
+                    <input asp-for="Title" class="form-control" required />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Scontents" class="form-label">Mô tả ngắn</label>
+                    <textarea asp-for="Scontents" class="form-control"></textarea>
+                    <span asp-validation-for="Scontents" class="text-danger"></span>
+                </div>
+
+                <!-- CKEditor cho nội dung chi tiết -->
+                <div class="mb-3">
+                    <label asp-for="Contents" class="form-label">Nội dung chi tiết</label>
+                    <textarea asp-for="Contents" class="form-control" id="editor"></textarea>
+                    <span asp-validation-for="Contents" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CatId" class="form-label">Danh mục</label>
+                    <select asp-for="CatId" class="form-select" asp-items="@(ViewData["CatId"] as SelectList)"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ảnh đại diện</label>
+                    <input type="file" name="ThumbFile" class="form-control" accept="image/*">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Tags" class="form-label">Thẻ từ khóa</label>
+                    <input asp-for="Tags" class="form-control" />
+                    <span asp-validation-for="Tags" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Author" class="form-label">Tác giả</label>
+                    <input asp-for="Author" class="form-control" />
+                    <span asp-validation-for="Author" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="AccountId" class="form-label">Tài khoản</label>
+                    <select asp-for="AccountId" class="form-select" asp-items="@(ViewData["AccountId"] as SelectList)"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Alias" class="form-label">Alias (URL thân thiện)</label>
+                    <input asp-for="Alias" class="form-control" />
+                    <span asp-validation-for="Alias" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MetaDesc" class="form-label">Mô tả Meta</label>
+                    <textarea asp-for="MetaDesc" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="MetaDesc" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MetaKey" class="form-label">Từ khóa Meta</label>
+                    <input asp-for="MetaKey" class="form-control" />
+                    <span asp-validation-for="MetaKey" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" asp-for="IsHot" />
+                    <label class="form-check-label">Tin nổi bật</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" asp-for="IsNewfeed" />
+                    <label class="form-check-label">Hiển thị trên Newfeed</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" asp-for="Published" />
+                    <label class="form-check-label">Xuất bản</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Tạo tin tức</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm CKEditor -->
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
+<script>
+    CKEDITOR.replace('editor', {
+        filebrowserUploadUrl: '/Admin/Tintucs/UploadImage',
+        filebrowserUploadMethod: 'form'
+    });
+</script>

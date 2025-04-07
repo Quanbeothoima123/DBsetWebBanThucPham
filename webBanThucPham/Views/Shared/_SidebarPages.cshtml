@@ -1,0 +1,45 @@
+﻿@model List<webBanThucPham.Models.Page>
+
+<div class="sidebar">
+    <h5 class="fw-bold mb-3">Danh sách trang</h5>
+    <ul class="list-unstyled">
+        @for (int i = 0; i < Math.Min(4, Model.Count); i++)
+        {
+            <li class="mb-3">
+                <a href="@Url.Action("Index", "Page", new { id = Model[i].PageId })" class="d-flex align-items-center text-decoration-none">
+                    <img src="@Model[i].Thumb" alt="@Model[i].Title" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                    <div>
+                        <h6 class="mb-1">@Model[i].Title</h6>
+                        <small class="text-muted">@Model[i].CreateDate?.ToString("dd/MM/yyyy")</small>
+                    </div>
+                </a>
+            </li>
+        }
+    </ul>
+
+    @if (Model.Count > 4)
+    {
+        <button class="btn btn-outline-primary btn-sm w-100" id="showMoreBtn">Xem thêm</button>
+        <ul class="list-unstyled d-none mt-3" id="morePages">
+            @for (int i = 4; i < Model.Count; i++)
+            {
+                <li class="mb-3">
+                    <a href="@Url.Action("Index", "Page", new { id = Model[i].PageId })" class="d-flex align-items-center text-decoration-none">
+                        <img src="@Model[i].Thumb" alt="@Model[i].Title" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                        <div>
+                            <h6 class="mb-1">@Model[i].Title</h6>
+                            <small class="text-muted">@Model[i].CreateDate?.ToString("dd/MM/yyyy")</small>
+                        </div>
+                    </a>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+<script>
+    document.getElementById("showMoreBtn").addEventListener("click", function () {
+        document.getElementById("morePages").classList.toggle("d-none");
+        this.remove();
+    });
+</script>

@@ -1,0 +1,134 @@
+﻿@model X.PagedList.IPagedList<Product>
+@using X.PagedList.Mvc.Core
+@{
+    ViewData["Title"] = "Danh sách sản phẩm";
+}
+
+<div class="container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 order-lg-1 order-2 pt-10 pt-lg-0">
+            <div class="sidebar-area">
+                <div class="widgets-searchbox mb-9">
+                    <form method="get" action="@Url.Action("Index")">
+                        <input class="input-field" type="text" name="search" placeholder="Tìm kiếm" value="@ViewBag.Search">
+                        <button class="widgets-searchbox-btn" type="submit">
+                            <i class="pe-7s-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="widgets-area mb-9">
+                    <h2 class="widgets-title mb-5">Tinh chỉnh</h2>
+                    <form method="get" action="@Url.Action("Index")">
+                        <input type="hidden" name="search" value="@ViewBag.Search" />
+                        <ul class="widgets-checkbox">
+                            <li>
+                                <input type="checkbox" name="discounted" id="discounted" @(ViewBag.Discounted == true ? "checked" : "")>
+                                <label for="discounted">Đang giảm giá</label>
+                            </li>
+                            <li>
+                                <input type="checkbox" name="newProducts" id="newProducts" @(ViewBag.NewProducts == true ? "checked" : "")>
+                                <label for="newProducts">Sản phẩm mới</label>
+                            </li>
+                            <li>
+                                <input type="checkbox" name="inStock" id="inStock" @(ViewBag.InStock == true ? "checked" : "")>
+                                <label for="inStock">Sản phẩm còn hàng</label>
+                            </li>
+                        </ul>
+                        <h2 class="widgets-title mb-5">Lọc theo giá</h2>
+                        <input type="number" name="minPrice" class="form-control mb-2" placeholder="Giá tối thiểu" value="@ViewBag.MinPrice" min="1000" step="1000">
+                        <input type="number" name="maxPrice" class="form-control mb-2" placeholder="Giá tối đa" value="@ViewBag.MaxPrice" min="1000" step="1000">
+
+                        <button type="submit" class="btn btn-primary">Lọc</button>
+                    </form>
+                </div>
+                <div class="widgets-area">
+                    <h2 class="widgets-title mb-5">Tag</h2>
+                    <div class="widgets-item">
+                        <ul class="widgets-tags">
+                            @foreach (var tag in ViewBag.Tags)
+                            {
+                                <li><a href="#">@tag</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-lg-9 order-lg-2 order-1">
+            <div class="product-topbar">
+                <ul>
+                    <li class="page-count">
+                        <span>@Model.Count()</span> tìm thấy trong <span>@ViewBag.TotalCount</span>
+                    </li>
+                    <li class="short">
+                        <form method="get" action="@Url.Action("Index")">
+                            <input type="hidden" name="search" value="@ViewBag.Search" />
+                            <select name="sortOrder" class="form-select" onchange="this.form.submit()">
+                                @foreach (var item in new List<SelectListItem>
+                                {
+                                new SelectListItem { Text = "Sắp xếp theo mặc định", Value = "1", Selected = ViewBag.SortOrder == 1 },
+                                new SelectListItem { Text = "Sắp xếp theo giá cao", Value = "2", Selected = ViewBag.SortOrder == 2 },
+                                new SelectListItem { Text = "Sắp xếp theo giá thấp", Value = "3", Selected = ViewBag.SortOrder == 3 }
+                                })
+                                {
+                                    <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                                }
+                            </select>
+
+                        </form>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="row">
+                @foreach (var product in Model)
+                {
+                    <div class="col-12">
+                        <div class="product-item d-flex align-items-center p-3 border rounded shadow-sm">
+
+                            <!-- Hình ảnh sản phẩm -->
+                            <div class="product-img img-zoom-effect me-3" style="width: 270px; height: 300px; overflow: hidden;">
+                                <a asp-action="Details" asp-route-id="@product.ProductId">
+                                    <img class="img-fluid w-100 h-100" src="@product.Thumb" alt="@product.ProductName" style="object-fit: cover;">
+                                </a>
+
+                                <!-- Các nút thao tác -->
+                                <div class="product-add-action d-flex justify-content-around mt-2">
+                                    <a href="#" class="btn btn-outline-primary btn-sm"><i class="pe-7s-cart"></i></a>
+                                    <a href="#" class="btn btn-outline-secondary btn-sm"><i class="pe-7s-shuffle"></i></a>
+                                    <a href="#" class="btn btn-outline-danger btn-sm"><i class="pe-7s-like"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- Nội dung sản phẩm -->
+                            <div class="product-content flex-grow-1">
+                                <a class="product-name h5 d-block mb-2 text-dark" asp-action="Details" asp-route-id="@product.ProductId">
+                                    @product.ProductName
+                                </a>
+                                <div class="price-box pb-1">
+                                    <span class="new-price text-danger fw-bold">@product.Price VNĐ</span>
+                                </div>
+                                <!-- Mô tả ngắn -->
+                                <p class="short-desc mb-0 text-muted">@product.ShortDesc</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-4">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page, search = ViewBag.Search, sortOrder = ViewBag.SortOrder }),
+                         new X.PagedList.Web.Common.PagedListRenderOptions
+                {
+                    UlElementClasses = new[] { "pagination" },
+                    LiElementClasses = new[] { "page-item" },
+                    PageClasses = new[] { "page-link" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,113 @@
+using Microsoft.EntityFrameworkCore;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
+using webBanThucPham.Models;
+using AspNetCoreHero.ToastNotification;
+using AspNetCoreHero.ToastNotification.Extensions;
+using AspNetCoreHero.ToastNotification.Notyf;
+using Microsoft.AspNetCore.Http.Features;
+using SendGrid;
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600; // 100MB
+});
+
+
+builder.Services.AddControllersWithViews();
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 50 * 1024 * 1024; // 50MB
+});
+// Dang ký DbContext voi connection string duoc dinh nghia trong appsettings.json
+builder.Services.AddDbContext<DbBanThucPhamContext>(options =>
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("ConnectedDb"),
+        new MySqlServerVersion(new Version(9, 0, 2))
+    )
+);
+
+
+// Dang ky HtmlEncoder voi allowedRanges là UnicodeRanges.All
+builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(allowedRanges: new[] { UnicodeRanges.All }));
+// Them cac service can thiet cho container.
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+
+// Cau hinh Notyf
+builder.Services.AddNotyf(config =>
+{
+    config.DurationInSeconds = 5; // thoi gian hien thi thong bao (giay)
+    config.IsDismissable = true;  // Cho phep dong thong bao bang tay
+    config.Position = NotyfPosition.TopRight; // vi tri hien thi
+});
+
+
+// Dang ky IWebHostEnvironment
+builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
+
+
+// Dang ki SendGridClient voi DI container
+builder.Services.AddSingleton<ISendGridClient>(provider =>
+{
+    var apiKey = builder.Configuration["SendGrid:ApiKey"];
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        throw new InvalidOperationException("SendGrid API Key is not configured.");
+    }
+    return new SendGridClient(apiKey);
+});
+
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); //Thiet lap thoi gian  timeout cho session
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+
+var app = builder.Build();
+
+// Cau hinh middleware pipeline.
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+// Them UseSession vao Middleware
+app.UseSession();
+
+app.UseAuthorization();
+
+// Them middleware Notyf
+app.UseNotyf();
+
+// Cau hinh dinh tuyen  cho Areas.
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+);
+
+// Cau hinh route mac dinh
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
+
+app.Run();

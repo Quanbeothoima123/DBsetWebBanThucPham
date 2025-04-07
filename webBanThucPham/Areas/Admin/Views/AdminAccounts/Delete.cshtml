@@ -1,0 +1,71 @@
+﻿@model webBanThucPham.Models.Account
+
+@{
+    ViewData["Title"] = "Xóa tài khoản";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0"><i class="bi bi-trash"></i> Xóa tài khoản</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Bạn có chắc chắn muốn xóa tài khoản này?</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th><i class="bi bi-phone"></i> Số điện thoại</th>
+                            <td>@Html.DisplayFor(model => model.Phone)</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-envelope"></i> Email</th>
+                            <td>@Html.DisplayFor(model => model.Email)</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-person"></i> Họ và tên</th>
+                            <td>@Html.DisplayFor(model => model.FullName)</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-person-badge"></i> Vai trò</th>
+                            <td>@(Model.Role?.RoleName ?? "Không có vai trò")</td>
+                        </tr>
+                        <tr>
+                            @if (Model.Active ?? false)
+                            {
+                                @Html.Raw("<span class='badge bg-success'><i class='bi bi-check-circle'></i> Hoạt động</span>")
+                            }
+                            else
+                            {
+                                @Html.Raw("<span class='badge bg-danger'><i class='bi bi-x-circle'></i> Bị khóa</span>")
+                            }
+
+                        </tr>
+
+                        <tr>
+                            <th><i class="bi bi-calendar-check"></i> Ngày tạo</th>
+                            <td>@Html.DisplayFor(model => model.CreateDate)</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-clock-history"></i> Lần đăng nhập cuối</th>
+                            <td>@Html.DisplayFor(model => model.LastLogin)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <form asp-action="Delete" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');">
+                <input type="hidden" asp-for="AccountId" />
+                <div class="text-end">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xóa ngay
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,92 @@
+﻿@model webBanThucPham.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng kí tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container">
+    <h2 class="mt-4 text-center">Đăng ký tài khoản</h2>
+    <form asp-action="Register" method="post" class="needs-validation p-4 shadow-lg rounded bg-light" novalidate>
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label">Họ và Tên</label>
+            <input asp-for="FullName" class="form-control input-effect" required>
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" class="form-control input-effect" type="email" required>
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Phone" class="form-label">Số điện thoại</label>
+            <input asp-for="Phone" class="form-control input-effect" required>
+            <span asp-validation-for="Phone" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Birthday" class="form-label">Ngày sinh</label>
+            <input asp-for="Birthday" class="form-control input-effect" type="date" required>
+            <span asp-validation-for="Birthday" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3 position-relative">
+            <label asp-for="Password" class="form-label">Mật khẩu</label>
+            <input asp-for="Password" class="form-control input-effect password-field" type="password" required>
+            <span asp-validation-for="Password" class="text-danger"></span>
+            <span class="password-toggle" onclick="togglePassword('Password')">👁️</span>
+            <div id="password-strength" class="mt-1"></div>
+        </div>
+
+        <div class="mb-3 position-relative">
+            <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu</label>
+            <input asp-for="ConfirmPassword" class="form-control input-effect password-field" type="password" required>
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            <span class="password-toggle" onclick="togglePassword('ConfirmPassword')">👁️</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+    </form>
+</div>
+
+<style>
+    .input-effect:focus {
+        border-color: #007bff !important;
+        box-shadow: 0 0 5px #007bff !important;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 38px;
+        cursor: pointer;
+    }
+    #password-strength {
+        font-size: 0.9rem;
+    }
+</style>
+
+<script>
+    function togglePassword(id) {
+        var input = document.getElementById(id);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
+
+    document.getElementById('Password').addEventListener('input', function () {
+        var strengthText = document.getElementById('password-strength');
+        var value = this.value;
+        if (value.length < 8) {
+            strengthText.innerHTML = "🔴 Yếu (ít nhất 8 ký tự)";
+            strengthText.style.color = "red";
+        } else if (value.match(/[A-Z]/) && value.match(/[0-9]/)) {
+            strengthText.innerHTML = "🟢 Mạnh (Tốt!)";
+            strengthText.style.color = "green";
+        } else {
+            strengthText.innerHTML = "🟡 Trung bình (Thêm ký tự số hoặc chữ hoa)";
+            strengthText.style.color = "orange";
+        }
+    });
+</script>

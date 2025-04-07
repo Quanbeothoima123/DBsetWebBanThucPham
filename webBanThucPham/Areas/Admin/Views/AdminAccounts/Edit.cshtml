@@ -1,0 +1,84 @@
+﻿@model webBanThucPham.Models.Account
+
+@{
+    ViewData["Title"] = "Chỉnh sửa thông tin";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-warning text-white">
+            <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Chỉnh sửa tài khoản</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="AccountId" />
+
+                <div class="row">
+                    <!-- Cột 1 -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label"><i class="bi bi-phone"></i> Số điện thoại</label>
+                            <input asp-for="Phone" class="form-control" placeholder="Nhập số điện thoại" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"><i class="bi bi-envelope"></i> Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label"><i class="bi bi-person"></i> Họ và tên</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="RoleId" class="form-label"><i class="bi bi-person-badge"></i> Vai trò</label>
+                            <select asp-for="RoleId" class="form-select" asp-items="ViewBag.RoleId">
+                                <option value="">-- Chọn vai trò --</option>
+                            </select>
+                            <span asp-validation-for="RoleId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2 -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label"><i class="bi bi-lock"></i> Mật khẩu</label>
+                            <input asp-for="Password" class="form-control" type="password" placeholder="Nhập mật khẩu" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Salt" class="form-label"><i class="bi bi-shield-lock"></i> Mã bảo mật</label>
+                            <input asp-for="Salt" class="form-control" placeholder="Nhập mã bảo mật" />
+                            <span asp-validation-for="Salt" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Active" class="form-label"><i class="bi bi-check-circle"></i> Trạng thái</label>
+                            <select asp-for="Active" class="form-select">
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Bị khóa</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="CreateDate" class="form-label"><i class="bi bi-calendar-check"></i> Ngày tạo</label>
+                            <input asp-for="CreateDate" class="form-control" type="date" />
+                            <span asp-validation-for="CreateDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút hành động -->
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Xác minh tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center">Nhập Mã Xác Thực Cho Email</h2>
+
+    <!-- Hiển thị thông báo lỗi nếu có -->
+    @if (TempData["Error"] != null)
+    {
+        <div id="errorAlert" class="alert alert-danger text-center">
+            @TempData["Error"]
+        </div>
+    }
+
+    <form asp-action="VerifyEmail" method="post" id="verifyForm">
+        <div class="mb-3">
+            <label class="form-label">Mã xác thực</label>
+            <input type="text" name="code" id="codeInput" class="form-control" required>
+            <small class="text-danger d-none" id="errorText">Mã xác thực không hợp lệ!</small>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Xác Nhận</button>
+    </form>
+</div>
+
+<!-- JavaScript để hiển thị cảnh báo -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Ẩn thông báo lỗi sau 3 giây
+        let errorAlert = document.getElementById("errorAlert");
+        if (errorAlert) {
+            setTimeout(() => {
+                errorAlert.style.display = "none";
+            }, 3000);
+        }
+    });
+
+    document.getElementById("verifyForm").addEventListener("submit", function (event) {
+        let codeInput = document.getElementById("codeInput");
+        if (codeInput.value.trim() === "") {
+            event.preventDefault(); // Ngăn form submit
+            document.getElementById("errorText").classList.remove("d-none"); // Hiển thị lỗi
+        }
+    });
+</script>

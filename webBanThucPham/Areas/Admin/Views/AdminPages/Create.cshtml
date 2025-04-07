@@ -1,0 +1,86 @@
+﻿@model webBanThucPham.Models.Page
+
+@{
+    ViewData["Title"] = "Thêm trang";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="text-center mb-4">Thêm trang mới</h2>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="PageName" class="form-label">Tên trang</label>
+                    <input asp-for="PageName" class="form-control" id="pageNameInput" required />
+                    <span asp-validation-for="PageName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Contents" class="form-label">Nội dung</label>
+                    <textarea asp-for="Contents" class="form-control" id="editor"></textarea>
+                    <span asp-validation-for="Contents" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ảnh đại diện</label>
+                    <input type="file" name="ThumbFile" class="form-control" accept="image/*">
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Tiêu đề</label>
+                    <input asp-for="Title" class="form-control" required />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Ordering" class="form-label">Thứ tự</label>
+                    <input asp-for="Ordering" class="form-control" type="number" min="1" required />
+                    <span asp-validation-for="Ordering" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Alias" class="form-label">Alias (URL thân thiện)</label>
+                    <input asp-for="Alias" class="form-control" id="aliasInput" />
+                    <span asp-validation-for="Alias" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MetaDesc" class="form-label">Mô tả Meta</label>
+                    <textarea asp-for="MetaDesc" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="MetaDesc" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MetaKey" class="form-label">Từ khóa Meta</label>
+                    <input asp-for="MetaKey" class="form-control" />
+                    <span asp-validation-for="MetaKey" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Tạo trang</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm CKEditor -->
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
+<script>
+    CKEDITOR.replace('editor', {
+        filebrowserUploadUrl: '/Admin/Pages/UploadImage',
+        filebrowserUploadMethod: 'form'
+    });
+</script>
+<script>
+    document.getElementById("pageNameInput").addEventListener("input", function () {
+        let pageName = this.value;
+        let alias = pageName.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Loại bỏ dấu tiếng Việt
+            .replace(/\s+/g, "-") // Thay khoảng trắng bằng dấu '-'
+            .replace(/[^a-z0-9-]/g, ""); // Xóa ký tự không mong muốn
+
+        document.getElementById("aliasInput").value = alias;
+    });
+</script>

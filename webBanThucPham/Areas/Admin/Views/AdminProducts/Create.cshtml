@@ -1,0 +1,146 @@
+﻿@model webBanThucPham.Models.Product
+
+@{
+    ViewData["Title"] = "Thêm sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="text-center mb-4">Thêm sản phẩm</h2>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="ProductName" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="ProductName" class="form-control" required />
+                    <span asp-validation-for="ProductName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ShortDesc" class="form-label">Mô tả ngắn</label>
+                    <input asp-for="ShortDesc" class="form-control" />
+                    <span asp-validation-for="ShortDesc" class="text-danger"></span>
+                </div>
+
+                <!-- Sử dụng CKEditor cho Description -->
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Mô tả chi tiết</label>
+                    <textarea asp-for="Description" class="form-control" id="editor"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CatId" class="form-label">Danh mục</label>
+                    <select asp-for="CatId" class="form-select" asp-items="@(ViewData["CatId"] as SelectList)"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Price" class="form-label">Giá sản phẩm (VNĐ)</label>
+                    <input asp-for="Price" class="form-control" type="number" step="1000" min="0" required />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Discount" class="form-label">Giảm giá (%)</label>
+                    <input asp-for="Discount" class="form-control" type="number" step="1" min="0" max="100" required />
+                    <span asp-validation-for="Discount" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ảnh sản phẩm</label>
+                    <input type="file" name="ThumbFile" class="form-control" accept="image/*">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Thêm hình ảnh chi tiết của sản phẩm (Tối đa 5 ảnh)</label>
+                    <div class="row">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <div class="col-md-2 text-center">
+                                <label for="DetailImage_@i">
+                                    <img id="preview_@i" src="/images/placeholder.png" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                </label>
+                                <input type="file" name="DetailImages" id="DetailImage_@i" class="form-control d-none" accept="image/*" onchange="previewImage(this, @i)">
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Video sản phẩm</label>
+                    <input type="file" name="VideoFile" class="form-control" accept="video/*">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Tags" class="form-label">Thẻ từ khóa</label>
+                    <input asp-for="Tags" class="form-control" />
+                    <span asp-validation-for="Tags" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Tiêu đề SEO</label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Alias" class="form-label">Alias (URL thân thiện)</label>
+                    <input asp-for="Alias" class="form-control" />
+                    <span asp-validation-for="Alias" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MetaDesc" class="form-label">Mô tả Meta</label>
+                    <textarea asp-for="MetaDesc" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="MetaDesc" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MetaKey" class="form-label">Từ khóa Meta</label>
+                    <input asp-for="MetaKey" class="form-control" />
+                    <span asp-validation-for="MetaKey" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="UnitsInStock" class="form-label">Số lượng trong kho</label>
+                    <input asp-for="UnitsInStock" class="form-control" type="number" min="0" required />
+                    <span asp-validation-for="UnitsInStock" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" asp-for="BestSellers" />
+                    <label class="form-check-label">Bán chạy</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" asp-for="HomeFlag" />
+                    <label class="form-check-label">Hiển thị trên trang chủ</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Tạo sản phẩm</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm CKEditor -->
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
+<script>
+    CKEDITOR.replace('editor', {
+        filebrowserUploadUrl: '/Admin/Products/UploadImage', // API xử lý upload ảnh
+        filebrowserUploadMethod: 'form'
+    });
+</script>
+<script>
+    function previewImage(input, index) {
+        if (input.files && input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('preview_' + index).src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

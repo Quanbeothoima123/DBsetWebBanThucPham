@@ -1,0 +1,112 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<webBanThucPham.Models.Page>
+
+@{
+    ViewData["Title"] = "Quản lý trang";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Quản lý trang</h3>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm trang mới
+        </a>
+    </div>
+
+    <!-- Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Tên trang</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Thứ tự</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr id="row_@item.PageId">
+                        <td>@item.PageId</td>
+                        <td>@item.PageName</td>
+                        <td>
+                            <span class="badge @(item.Published.GetValueOrDefault() ? "bg-success" : "bg-danger")">
+                                @(item.Published.GetValueOrDefault() ? "Đã xuất bản" : "Nháp")
+                            </span>
+                        </td>
+                        <td>@(item.CreateDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa có")</td>
+                        <td>@(item.Ordering?.ToString() ?? "-")</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.PageId" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square"></i> Sửa
+                            </a>
+                            <a asp-action="Details" asp-route-id="@item.PageId" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> Chi tiết
+                            </a>
+                            <button class="btn btn-sm btn-danger btn-delete" data-id="@item.PageId">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân trang -->
+    <div class="d-flex justify-content-center mt-4">
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }),
+                 new X.PagedList.Web.Common.PagedListRenderOptions
+        {
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" }
+        })
+    </div>
+</div>
+
+<!-- SweetAlert & AJAX -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".btn-delete").forEach(button => {
+            button.addEventListener("click", function () {
+                let pageId = this.getAttribute("data-id");
+
+                Swal.fire({
+                    title: "Bạn có chắc muốn xóa?",
+                    text: "Hành động này không thể hoàn tác!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Xóa",
+                    cancelButtonText: "Hủy"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/Admin/AdminPages/Delete/${pageId}`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }).then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById("row_" + pageId).remove();
+                                Swal.fire("Đã xóa!", "Trang đã được xóa thành công.", "success");
+                            } else {
+                                Swal.fire("Lỗi!", data.message, "error");
+                            }
+                        }).catch(error => {
+                            Swal.fire("Lỗi!", "Đã xảy ra lỗi trong quá trình xóa.", "error");
+                        });
+                    }
+                });
+            });
+        });
+    });
+</script>

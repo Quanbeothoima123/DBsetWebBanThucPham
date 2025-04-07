@@ -1,0 +1,118 @@
+﻿@model webBanThucPham.Models.Tintuc
+
+@{
+    ViewData["Title"] = "Chỉnh sửa tin tức";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1 class="mb-3">Chỉnh sửa tin tức</h1>
+
+<form asp-action="Edit" enctype="multipart/form-data">
+    <input type="hidden" asp-for="PostId" />
+
+    <div class="row">
+        <!-- Cột chính -->
+        <div class="col-md-8">
+            <div class="form-group">
+                <label asp-for="Title">Tiêu đề</label>
+                <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề..." />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Scontents">Mô tả ngắn</label>
+                <input asp-for="Scontents" class="form-control" placeholder="Nhập mô tả ngắn..." />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Contents">Nội dung chi tiết</label>
+                <textarea asp-for="Contents" class="form-control" id="ckeditor"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MetaKey">Từ khóa SEO</label>
+                <input asp-for="MetaKey" class="form-control" placeholder="Nhập từ khóa SEO..." />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MetaDesc">Mô tả SEO</label>
+                <input asp-for="MetaDesc" class="form-control" placeholder="Nhập mô tả SEO..." />
+            </div>
+        </div>
+
+        <!-- Cột phụ -->
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="CatId">Danh mục</label>
+                <select asp-for="CatId" class="form-control" asp-items="ViewBag.CatId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Author">Tác giả</label>
+                <input asp-for="Author" class="form-control" placeholder="Nhập tên tác giả..." />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AccountId">Loại tài khoản</label>
+                <select asp-for="AccountId" class="form-control" asp-items="ViewBag.AccountId"></select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Alias">Alias (Đường dẫn SEO)</label>
+                <input asp-for="Alias" class="form-control" placeholder="Nhập alias..." />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Tags">Tags</label>
+                <input asp-for="Tags" class="form-control" placeholder="Nhập tags cách nhau bởi dấu phẩy..." />
+            </div>
+
+            <div class="form-group">
+                <label>Hình ảnh đại diện</label>
+                <input type="file" class="form-control" name="ThumbFile" />
+                @if (!string.IsNullOrEmpty(Model.Thum))
+                {
+                    <img src="@Model.Thum" class="img-thumbnail mt-2" width="150" />
+                }
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Published">Trạng thái</label>
+                <select asp-for="Published" class="form-control">
+                    <option value="true">Xuất bản</option>
+                    <option value="false">Nháp</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Views">Lượt xem</label>
+                <input asp-for="Views" class="form-control" type="number" readonly />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CreatedDate">Ngày tạo</label>
+                <input asp-for="CreatedDate" class="form-control" type="datetime-local" />
+            </div>
+
+            <div class="form-check">
+                <input asp-for="IsHot" class="form-check-input" type="checkbox" />
+                <label asp-for="IsHot" class="form-check-label">Tin nóng</label>
+            </div>
+
+            <div class="form-check">
+                <input asp-for="IsNewfeed" class="form-check-input" type="checkbox" />
+                <label asp-for="IsNewfeed" class="form-check-label">Hiển thị trang chủ</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Lưu thay đổi</button>
+        </div>
+    </div>
+</form>
+
+<!-- CKEditor -->
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
+<script>
+    CKEDITOR.replace('ckeditor', {
+        filebrowserUploadUrl: '/Admin/Tintucs/UploadImage',
+        filebrowserUploadMethod: 'form'
+    });
+</script>
+

@@ -1,0 +1,207 @@
+﻿@model webBanThucPham.Models.Tintuc
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!-- Begin Main Content Area -->
+<main class="main-content">
+    <div class="breadcrumb-area breadcrumb-height" data-bg-image="@Url.Content("~/assets/images/breadcrumb/bg/1-1-1920x373.jpg")">
+        <div class="container h-100">
+            <div class="row h-100">
+                <div class="col-lg-12">
+                    <div class="breadcrumb-item">
+                        <h2 class="breadcrumb-heading">Blog</h2>
+                        <ul>
+                            <li>
+                                <a href="index.html">Trang chủ<i class="pe-7s-angle-right"></i></a>
+                            </li>
+                            <li>Chi tiết tin tức</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="blog-area section-space-y-axis-100">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 order-2 pt-10 pt-lg-0">
+                    <div class="sidebar-area">
+                        @* thanh tìm kiếm ở đây *@
+                        <!-- Thanh tìm kiếm -->
+                        <div class="search-widget mb-4">
+                            <form method="get" action="@Url.Action("Detail", "Blog")">
+                                <input type="text" name="searchQuery" class="form-control" placeholder="Tìm kiếm bài viết..." value="@ViewBag.SearchQuery">
+                                <button type="submit" class="btn btn-primary mt-2 w-100">Tìm kiếm</button>
+                            </form>
+                        </div>
+
+                        <!-- Hiển thị kết quả tìm kiếm -->
+                        @if (ViewBag.SearchResults != null && ViewBag.SearchResults.Count > 0)
+                        {
+                            <div class="search-results">
+                                <h5 class="mb-3">Kết quả tìm kiếm:</h5>
+                                <div class="list-group">
+                                    @foreach (var item in ViewBag.SearchResults)
+                                    {
+                                        <a href="@Url.Action("Detail", "Blog", new { id = item.PostId })" class="list-group-item list-group-item-action">
+                                            <div class="d-flex align-items-center">
+                                                <!-- Thumbnail -->
+                                                <img src="@item.Thum" alt="@item.Title" class="img-thumbnail me-3" style="width: 80px; height: 60px; object-fit: cover;">
+
+                                                <div>
+                                                    <!-- Tiêu đề bài viết -->
+                                                    <h6 class="mb-1 text-primary">@item.Title</h6>
+
+                                                    <!-- Thông tin bổ sung -->
+                                                    <small class="text-muted">Tác giả: @item.Author | Ngày: @item.CreatedDate.ToString("dd/MM/yyyy")</small>
+                                                    <br>
+                                                    <small class="text-muted"><i class="fas fa-eye"></i> @item.Views lượt xem</small>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @* kết thúc phần tìm kiếm *@
+                        <div class="widgets-area mb-9">
+                            <h2 class="widgets-title mb-5">Bài viết có lượt xem cao nhất</h2>
+                            <div class="widgets-item">
+                                <div class="swiper-container widgets-list-slider style-2">
+                                    <div class="swiper-wrapper">
+                                        @if (ViewBag.TopNews != null && ViewBag.TopNews.Count > 0)
+                                        {
+                                            @foreach (var news in ViewBag.TopNews)
+                                            { 
+                                                <div class="swiper-slide">
+                                                    <div class="product-list-item">
+                                                        <div class="product-img img-zoom-effect">
+                                                            <a asp-controller="Blog" asp-action="Detail" asp-route-id="@news.PostId">
+                                                                <img class="img-full" src="@news.Thum" alt="@news.Title">
+                                                            </a>
+                                                        </div>
+                                                        <div class="product-content">
+                                                            <h5 class="title mb-3">
+                                                                <a asp-controller="Blog" asp-action="Detail" asp-route-id="@news.PostId">@news.Title</a>
+                                                            </h5>
+                                                            <div class="blog-meta text-manatee pb-1">
+                                                                <ul>
+                                                                    <li class="date">@news.CreatedDate.ToString("dd/MM/yyyy")</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <p>Không có bài viết nổi bật.</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="widgets-area mb-9">
+                            <h2 class="widgets-title mb-5">Tag</h2>
+                            <div class="widgets-item">
+                                <ul class="widgets-tags">
+                                    @if (ViewBag.Tags != null)
+                                    {
+                                        var tagList = ViewBag.Tags.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries);
+                                        foreach (var tag in tagList)
+                                        {
+                                            <li>
+                                                <a href="/tim-kiem?tag=@tag.Trim()">@tag.Trim()</a>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li>Không có tag nào.</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-9 order-1">
+                    <div class="blog-detail-item">
+                        <div class="blog-img">
+                            <img class="img-full" src="@Model.Thum" alt="@Model.Title">
+                        </div>
+                        <div class="blog-content text-start pb-0">
+                            <div class="blog-meta text-dim-gray pb-3">
+                                <ul>
+                                    <li class="date">
+                                        <i class="fa fa-calendar-o me-2"></i> @Model.CreatedDate?.ToString("dd/MM/yyyy")
+                                    </li>
+                                    <li>
+                                        <span class="author me-3">
+                                            <i class="fa fa-user me-2"></i> @Model.Author
+                                        </span>
+                                        <span class="comments me-3">
+                                            <a href="javascript:void(0)">0 Comments</a>
+                                        </span>
+                                        <span class="link-share">
+                                            <a href="javascript:void(0)">Share</a>
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <h5 class="title mb-4">
+                                <a href="javascript:void(0)">@Model.Title</a>
+                            </h5>
+                            <p class="short-desc mb-4 mb-7">@Model.Scontents</p>
+
+                            <blockquote class="pt-6 pb-5 mb-5">
+                                <div class="inner-content">
+                                    <p class="mb-0">
+                                        <i class="fa fa-quote-left me-2"></i>
+                                        @Model.Scontents
+                                        <span class="user-name ms-5 mb-0">@Model.Author</span>
+                                    </p>
+                                </div>
+                            </blockquote>
+
+                            <div class="blog-banner pb-10">
+                                <div class="single-content w-100 pt-4 pt-md-0">
+                                    @Html.Raw(Model.Contents)
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    @* Các bài viết liên quan sẽ ở đây *@
+                    <h3 class="mt-4">Bài viết liên quan</h3>
+                    <div class="row">
+                        @if (ViewBag.RelatedNews != null)
+                        {
+                            @foreach (var news in ViewBag.RelatedNews)
+                            {
+                                <div class="col-md-3">
+                                    <div class="card h-100">
+                                        <a href="@Url.Action("Detail", "Blog", new { id = news.PostId })">
+                                            <img src="@news.Thum" class="card-img-top" alt="@news.Title">
+                                        </a>
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <a href="@Url.Action("Detail", "Blog", new { id = news.PostId })">@news.Title</a>
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Main Content Area End Here -->

@@ -1,0 +1,105 @@
+﻿@model webBanThucPham.Models.Customer
+
+@{
+    ViewData["Title"] = "Chỉnh sửa thông tin";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-white text-center py-3">
+                    <h3 class="mb-0"><i class="bi bi-pencil-square"></i> Chỉnh sửa khách hàng</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        <input type="hidden" asp-for="CustomerId" />
+
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label"><i class="bi bi-person"></i> Họ và tên</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Birthday" class="form-label"><i class="bi bi-calendar"></i> Ngày sinh</label>
+                            <input asp-for="Birthday" type="date" class="form-control" />
+                            <span asp-validation-for="Birthday" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Avatar" class="form-label"><i class="bi bi-image"></i> Ảnh đại diện</label>
+                            <input asp-for="Avatar" type="file" class="form-control" />
+                            <span asp-validation-for="Avatar" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label"><i class="bi bi-house"></i> Địa chỉ</label>
+                            <input asp-for="Address" class="form-control" placeholder="Nhập địa chỉ" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"><i class="bi bi-envelope"></i> Email</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="Nhập email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label"><i class="bi bi-phone"></i> Số điện thoại</label>
+                            <input asp-for="Phone" class="form-control" placeholder="Nhập số điện thoại" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LocationId" class="form-label"><i class="bi bi-geo"></i> Tỉnh/Thành phố</label>
+                            <select asp-for="LocationId" class="form-select" asp-items="ViewBag.LocationId">
+                                <option value="">-- Chọn địa điểm --</option>
+                            </select>
+                            <span asp-validation-for="LocationId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="District" class="form-label"><i class="bi bi-map"></i> Quận/Huyện</label>
+                            <input asp-for="District" class="form-control" placeholder="Nhập quận/huyện" />
+                            <span asp-validation-for="District" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Ward" class="form-label"><i class="bi bi-geo-alt"></i> Phường/Xã</label>
+                            <input asp-for="Ward" class="form-control" placeholder="Nhập phường/xã" />
+                            <span asp-validation-for="Ward" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CreateDate" class="form-label"><i class="bi bi-calendar-check"></i> Ngày tạo</label>
+                            <input asp-for="CreateDate" type="date" class="form-control" />
+                            <span asp-validation-for="CreateDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Active" class="form-label"><i class="bi bi-toggle-on"></i> Trạng thái</label>
+                            <select asp-for="Active" class="form-select">
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Không hoạt động</option>
+                            </select>
+                            <span asp-validation-for="Active" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save"></i> Lưu thay đổi
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,112 @@
+﻿@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Đăng nhập</h3>
+
+                    <!-- Tab lựa chọn phương thức đăng nhập -->
+                    <ul class="nav nav-tabs mb-3" id="loginTab">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#loginPassword">Mật khẩu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#loginOtp">Mã OTP</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Đăng nhập bằng mật khẩu -->
+                        <div class="tab-pane fade show active" id="loginPassword">
+                            <form asp-action="Login" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Mật khẩu</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+                            </form>
+                        </div>
+
+                        <!-- Đăng nhập bằng mã OTP -->
+                        <div class="tab-pane fade" id="loginOtp">
+                            <form id="otpForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="otpEmail" class="form-control" required>
+                                </div>
+                                <button type="button" id="sendOtp" class="btn btn-warning w-100">Gửi mã OTP</button>
+                            </form>
+
+                            <form id="verifyOtpForm" class="mt-3 d-none">
+                                <div class="mb-3">
+                                    <label class="form-label">Nhập mã OTP</label>
+                                    <input type="text" id="otpCode" class="form-control" required>
+                                </div>
+                                <button type="button" id="verifyOtp" class="btn btn-success w-100">Xác nhận</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Hiển thị thông báo -->
+                    <div id="message" class="alert mt-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("sendOtp").addEventListener("click", function () {
+        let email = document.getElementById("otpEmail").value;
+        let messageBox = document.getElementById("message");
+
+        fetch("/CustomAccount/SendOtp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageBox.className = "alert alert-success";
+                document.getElementById("verifyOtpForm").classList.remove("d-none");
+            } else {
+                messageBox.className = "alert alert-danger";
+            }
+            messageBox.innerText = data.message;
+            messageBox.classList.remove("d-none");
+        });
+    });
+
+    document.getElementById("verifyOtp").addEventListener("click", function () {
+        let email = document.getElementById("otpEmail").value;
+        let otp = document.getElementById("otpCode").value;
+        let messageBox = document.getElementById("message");
+
+        fetch("/CustomAccount/VerifyOtp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, otp: otp })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageBox.className = "alert alert-success";
+                setTimeout(() => window.location.href = "/Home/Index", 2000);
+            } else {
+                messageBox.className = "alert alert-danger";
+            }
+            messageBox.innerText = data.message;
+            messageBox.classList.remove("d-none");
+        });
+    });
+</script>

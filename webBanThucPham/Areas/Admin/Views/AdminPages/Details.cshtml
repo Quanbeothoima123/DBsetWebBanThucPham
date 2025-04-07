@@ -1,0 +1,68 @@
+﻿@model webBanThucPham.Models.Page
+
+@{
+    ViewData["Title"] = "Chi tiết trang";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="row g-0">
+            <!-- Cột hình ảnh trang -->
+            <div class="col-md-4 text-center p-3">
+                <img src="@(string.IsNullOrEmpty(Model.Thumb) ? "/images/default.png" : Model.Thumb)"
+                     alt="Hình ảnh trang"
+                     class="img-fluid rounded shadow-lg"
+                     style="max-height: 300px; object-fit: cover;">
+            </div>
+
+            <!-- Cột thông tin trang -->
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h3 class="card-title">@Model.PageName</h3>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tiêu đề:</strong> @(Model.Title ?? "Không có")</p>
+                            <p><strong>Alias:</strong> @(Model.Alias ?? "Không có")</p>
+                            <p><strong>Thứ tự hiển thị:</strong> @(Model.Ordering)</p>
+                            <p><strong>Đã xuất bản:</strong> @(Model.Published.GetValueOrDefault() ? "Có" : "Không")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Ngày tạo:</strong> @(Model.CreateDate?.ToString("dd/MM/yyyy") ?? "Chưa có dữ liệu")</p>
+                            <p><strong>Mô tả Meta:</strong> @(Model.MetaDesc ?? "Không có")</p>
+                            <p><strong>Từ khóa Meta:</strong> @(Model.MetaKey ?? "Không có")</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <a asp-action="Edit" asp-route-id="@Model?.PageId" class="btn btn-warning">
+                            <i class="bi bi-pencil-square"></i> Sửa trang
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nội dung trang -->
+        <div class="card mt-3 p-3">
+            <h4>Nội dung chi tiết</h4>
+            @if (!string.IsNullOrEmpty(Model?.Contents))
+            {
+                <div class="border p-3" style="background-color: #f8f9fa;">
+                    @Html.Raw(Model?.Contents)
+                </div>
+            }
+            else
+            {
+                <div class="border p-3" style="background-color: #f8f9fa; text-align: center;">
+                    <em>Chưa có nội dung</em>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,33 @@
+﻿@model webBanThucPham.Models.Role
+
+@{
+    ViewData["Title"] = "Xóa";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+<h1 class="mb-4 text-danger">Xóa Vai Trò</h1>
+<h3 class="text-warning">Bạn có chắc chắn muốn xóa vai trò này?</h3>
+
+<div class="card shadow-lg p-4">
+    <h4 class="text-primary">Thông Tin Vai Trò</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3 fw-bold">Tên Vai Trò</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.RoleName)</dd>
+
+        <dt class="col-sm-3 fw-bold">Mô Tả</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Description)</dd>
+    </dl>
+</div>
+
+<form asp-action="Delete" class="mt-4">
+    <input type="hidden" asp-for="RoleId" />
+    <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-danger me-2">
+            <i class="bi bi-trash"></i> Xóa
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay Lại
+        </a>
+    </div>
+</form>
+

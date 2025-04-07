@@ -1,0 +1,80 @@
+﻿@model webBanThucPham.Models.Customer
+
+@{
+    ViewData["Title"] = "Thông tin chi tiết";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+<h1 class="mb-4">Chi tiết khách hàng</h1>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Thông tin khách hàng</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                @if (!string.IsNullOrEmpty(Model.Avatar))
+                {
+                    <img src="@Model.Avatar" class="img-fluid rounded-circle border" alt="Ảnh đại diện" width="150">
+                }
+                else
+                {
+                    <img src="/images/default-avatar.png" class="img-fluid rounded-circle border" alt="Không có ảnh" width="150">
+                }
+            </div>
+            <div class="col-md-8">
+                <dl class="row">
+                    <dt class="col-sm-4">Họ và tên</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.FullName)</dd>
+
+                    <dt class="col-sm-4">Ngày sinh</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Birthday)</dd>
+
+                    <dt class="col-sm-4">Địa chỉ</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Address)</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Email)</dd>
+
+                    <dt class="col-sm-4">Số điện thoại</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Phone)</dd>
+
+                    <dt class="col-sm-4">Quận / Huyện</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.District)</dd>
+
+                    <dt class="col-sm-4">Phường / Xã</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Ward)</dd>
+
+                    <dt class="col-sm-4">Ngày tạo</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.CreateDate)</dd>
+
+                    <dt class="col-sm-4">Lần đăng nhập cuối</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.LastLogin)</dd>
+
+                    <dt class="col-sm-4">Trạng thái</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Active ?? false)
+                        {
+                            <span class="badge bg-success">Hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Không hoạt động</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Mã khu vực</dt>
+                    <dd class="col-sm-8">@(Model.Location?.LocationId != null ? Model.Location.LocationId.ToString() : "N/A")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="Edit" asp-route-id="@Model?.CustomerId" class="btn btn-warning">
+        <i class="bi bi-pencil-square"></i> Chỉnh sửa
+    </a>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>

@@ -1,0 +1,126 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model X.PagedList.IPagedList<webBanThucPham.Models.Tintuc>
+
+@{
+    ViewData["Title"] = "Danh sách tin tức";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Danh sách tin tức</h1>
+<p>
+    <a asp-action="Create" class="btn btn-primary">Thêm tin tức mới</a>
+</p>
+<!-- Form tìm kiếm -->
+<form method="get" asp-action="Index">
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" name="searchTitle" class="form-control" placeholder="Tìm theo tiêu đề..." value="@Context.Request.Query["searchTitle"]">
+        </div>
+        <div class="col-md-3">
+            <select name="searchPublished" class="form-control">
+                <option value="">-- Chọn trạng thái --</option>
+                <option value="true" selected="@(Context.Request.Query["searchPublished"] == "true")">Đã xuất bản</option>
+                <option value="false" selected="@(Context.Request.Query["searchPublished"] == "false")">Chưa xuất bản</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" name="searchAuthor" class="form-control" placeholder="Tìm theo tác giả..." value="@Context.Request.Query["searchAuthor"]">
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-secondary">Làm mới</a>
+        </div>
+    </div>
+</form>
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Tóm tắt</th>
+            <th>Ngày tạo</th>
+            <th>Tác giả</th>
+            <th>Lượt xem</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Title)</td>
+                <td>@Html.DisplayFor(modelItem => item.Scontents)</td>
+                <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
+                <td>@Html.DisplayFor(modelItem => item.Author)</td>
+                <td>@Html.DisplayFor(modelItem => item.Views)</td>
+                <td>
+                    @if (item.Published)
+                    {
+                        <span class="badge bg-success">Đã xuất bản</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Chưa xuất bản</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.PostId" class="btn btn-sm btn-warning">Sửa</a>
+                    <a asp-action="Details" asp-route-id="@item.PostId" class="btn btn-sm btn-info">Xem</a>
+                    <button class="btn btn-danger btn-sm btn-delete" data-id="@item.PostId">Xóa</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Hiển thị phân trang -->
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(Model, page => Url.Action("Index", new
+        {
+            searchTitle = Context.Request.Query["searchTitle"],
+            searchPublished = Context.Request.Query["searchPublished"],
+            searchAuthor = Context.Request.Query["searchAuthor"],
+            page
+        }),
+            new X.PagedList.Web.Common.PagedListRenderOptions
+    {
+        LiElementClasses = new[] { "page-item" },
+        PageClasses = new[] { "page-link" }
+    })
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".btn-delete").forEach(button => {
+            button.addEventListener("click", function () {
+                let PostId = this.getAttribute("data-id");
+
+                Swal.fire({
+                    title: "Bạn có chắc chắn?",
+                    text: "Tin tức này sẽ bị xóa vĩnh viễn!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Xóa",
+                    cancelButtonText: "Hủy"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/Admin/AdminTintucs/Delete?id=${PostId}`, {
+                            method: "POST"
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            Swal.fire("Xóa thành công!", data.message, "success").then(() => {
+                                location.reload();
+                            });
+                        })
+                        .catch(() => Swal.fire("Lỗi!", "Không thể xóa tin tức.", "error"));
+                    }
+                });
+            });
+        });
+    });
+</script>

@@ -1,0 +1,106 @@
+﻿@model IEnumerable<webBanThucPham.Models.Account>
+
+@{
+    ViewData["Title"] = "Danh sách tài khoản quản trị";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Quản lý tài khoản</h3>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm tài khoản quản trị
+        </a>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select class="form-select" id="filterRole">
+                <option selected disabled>Chọn quyền</option>
+                @foreach (var role in ViewBag.Roles)
+                {
+                    <option value="@role.Value">@role.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterStatus">
+                <option selected disabled>Trạng thái</option>
+                @foreach (var status in ViewBag.Statuses)
+                {
+                    <option value="@status.Value">@status.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" placeholder="Tìm kiếm...">
+        </div>
+    </div>
+
+    <!-- Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>STT</th>
+                    <th>Họ & Tên</th>
+                    <th>Email</th>
+                    <th>Quyền</th>
+                    <th>Hoạt động</th>
+                    <th>Ngày tạo</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>#@item.AccountId</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                @* <img src="https://via.placeholder.com/40" class="rounded-circle me-2" alt="Avatar"> *@
+                                @item.FullName
+                            </div>
+                        </td>
+                        <td>@item.Email</td>
+                        <td>
+                            @if (item.Role != null)
+                            {
+                                <span class="badge bg-info">@item.Role.RoleName</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Không có vai trò</span>
+                            }
+
+                        </td>
+                        <td>
+                            @if (item.Active.HasValue && item.Active.Value)
+                            {
+                                <span class="badge bg-success">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Bị khóa</span>
+                            }
+                        </td>
+                        <td>@(item.CreateDate.HasValue ? item.CreateDate.Value.ToString("dd/MM/yyyy") : "N/A")</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.AccountId" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square">Sửa</i>
+                            </a>
+                            <a asp-action="Details" asp-route-id="@item.AccountId" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye">Chi tiết</i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.AccountId" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash">Xóa</i>
+                            </a>
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

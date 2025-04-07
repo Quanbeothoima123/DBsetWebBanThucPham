@@ -1,0 +1,229 @@
+﻿@model webBanThucPham.Models.Product
+
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    List<string> thumbnails = Model.Thumbnail?.Split(" ")?.ToList() ?? new List<string>();
+}
+
+<h1>Chỉnh sửa sản phẩm</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ProductId" />
+
+            <div class="form-group">
+                <label asp-for="ProductName" class="control-label">Tên sản phẩm</label>
+                <input asp-for="ProductName" class="form-control" placeholder="Nhập tên sản phẩm..." />
+                <span asp-validation-for="ProductName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ShortDesc" class="control-label">Mô tả ngắn</label>
+                <input asp-for="ShortDesc" class="form-control" placeholder="Nhập mô tả ngắn..." />
+                <span asp-validation-for="ShortDesc" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
+                <textarea asp-for="Description" class="form-control" id="ckeditor"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CatId" class="control-label">Danh mục sản phẩm</label>
+                <select asp-for="CatId" class="form-select" asp-items="@(ViewData["CatId"] as SelectList)"></select>
+                <span asp-validation-for="CatId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Price" class="control-label">Giá tiền (VNĐ)</label>
+                <input asp-for="Price" class="form-control" type="number" step="1000" placeholder="Nhập giá sản phẩm..." />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Discount" class="control-label">Giảm giá (%)</label>
+                <input asp-for="Discount" class="form-control" type="number" step="1" min="0" max="100" placeholder="Nhập phần trăm giảm giá..." />
+                <span asp-validation-for="Discount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Thumb">Hình ảnh sản phẩm</label>
+                <input type="file" class="form-control" name="ThumbFile" />
+                @if (!string.IsNullOrEmpty(Model.Thumb))
+                {
+                    <div class="mt-2">
+                        <img src="@Model.Thumb" class="img-thumbnail" width="150" />
+                    </div>
+                }
+            </div>
+
+            <div class="form-group">
+                <label>Hình ảnh sản phẩm hiện tại</label>
+                <div class="row" id="thumbnailContainer">
+                    @if (thumbnails.Count > 0)
+                    {
+                        @for (int i = 0; i < thumbnails.Count; i++)
+                        {
+                            <div class="col-md-2 text-center thumb-item" data-index="@i">
+                                <img src="@thumbnails[i]" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                <p>Vị trí: @i</p>
+                                <input type="file" class="form-control d-none thumb-input" name="NewThumbFiles" data-index="@i" accept="image/*" onchange="updateImage(this, @i)">
+                                <button type="button" class="btn btn-sm btn-warning" onclick="selectNewImage(@i)">Thay đổi</button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeImage(@i)">Xóa</button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>Chưa có ảnh nào.</p>
+                    }
+                </div>
+                <button type="button" class="btn btn-primary mt-2" onclick="addNewImage()">+ Thêm ảnh</button>
+            </div>
+
+            <!-- Input ẩn lưu danh sách vị trí bị xóa -->
+            <input type="hidden" id="DeletedImages" name="DeleteIndexesRaw" value="">
+
+            <div class="form-group">
+                <label asp-for="Video">Video sản phẩm</label>
+                <input type="file" class="form-control" name="VideoFile" />
+                @if (!string.IsNullOrEmpty(Model.Video))
+                {
+                    <div class="mt-2">
+                        <video width="300" controls>
+                            <source src="@Model.Video" type="video/mp4">
+                            Trình duyệt của bạn không hỗ trợ video.
+                        </video>
+                    </div>
+                }
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="BestSellers" /> Sản phẩm bán chạy
+                </label>
+            </div>
+
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="HomeFlag" /> Hiển thị trang chủ
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Active" class="control-label">Trạng thái</label>
+                <select asp-for="Active" class="form-control">
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Ngừng bán</option>
+                </select>
+                <span asp-validation-for="Active" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Tags" class="control-label">Từ khóa sản phẩm</label>
+                <input asp-for="Tags" class="form-control" placeholder="Nhập từ khóa cách nhau bằng dấu phẩy..." />
+                <span asp-validation-for="Tags" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Title" class="control-label">Tiêu đề SEO</label>
+                <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề SEO..." />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Alias" class="control-label">Đường dẫn Alias</label>
+                <input asp-for="Alias" class="form-control" placeholder="Nhập alias sản phẩm..." />
+                <span asp-validation-for="Alias" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MetaDesc" class="control-label">Mô tả SEO</label>
+                <input asp-for="MetaDesc" class="form-control" placeholder="Nhập mô tả SEO..." />
+                <span asp-validation-for="MetaDesc" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MetaKey" class="control-label">Từ khóa SEO</label>
+                <input asp-for="MetaKey" class="form-control" placeholder="Nhập từ khóa SEO..." />
+                <span asp-validation-for="MetaKey" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="UnitsInStock" class="control-label">Số lượng trong kho</label>
+                <input asp-for="UnitsInStock" class="form-control" type="number" step="1" placeholder="Nhập số lượng..." />
+                <span asp-validation-for="UnitsInStock" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Lưu thay đổi" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Thêm CKEditor -->
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
+<script>
+    CKEDITOR.replace('ckeditor', {
+        filebrowserUploadUrl: '/Admin/Products/UploadImage', // API xử lý upload ảnh
+        filebrowserUploadMethod: 'form'
+    });
+</script>
+
+<script>
+    function previewImage(input, index) {
+        var file = input.files[0];
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('preview_' + index).src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+</script>
+
+<script>
+    let deletedImages = [];
+
+    function selectNewImage(index) {
+        document.querySelector(`.thumb-input[data-index='${index}']`).click();
+    }
+
+    function updateImage(input, index) {
+        if (input.files && input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.querySelector(`.thumb-item[data-index='${index}'] img`).src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeImage(index) {
+        let thumbItem = document.querySelector(`.thumb-item[data-index='${index}']`);
+        if (thumbItem) {
+            deletedImages.push(index); // Ghi nhớ vị trí ảnh bị xóa
+            document.getElementById("DeletedImages").value = deletedImages.join(",");
+            thumbItem.remove();
+        }
+    }
+
+    function addNewImage() {
+        let newIndex = document.querySelectorAll(".thumb-item").length;
+        let container = document.getElementById("thumbnailContainer");
+        let newThumb = document.createElement("div");
+        newThumb.className = "col-md-2 text-center thumb-item";
+        newThumb.setAttribute("data-index", newIndex);
+        newThumb.innerHTML = `
+            <img src="/images/placeholder.png" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+            <p>Vị trí: ${newIndex}</p>
+            <input type="file" class="form-control thumb-input" name="NewThumbFiles" data-index="${newIndex}" accept="image/*" onchange="updateImage(this, ${newIndex})">
+            <button type="button" class="btn btn-sm btn-warning" onclick="selectNewImage(${newIndex})">Thay đổi</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeImage(${newIndex})">Xóa</button>
+        `;
+        container.appendChild(newThumb);
+    }
+</script>

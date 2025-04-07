@@ -1,0 +1,72 @@
+﻿@model webBanThucPham.Models.Page
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main class="main-content">
+    <div class="blog-area section-space-y-axis-100">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9 order-1">
+                    @if (Model != null)
+                    {
+                        <article class="blog-post">
+                            <!-- Tiêu đề bài viết -->
+                            <h1 class="blog-title">@Model.Title</h1>
+
+                            <!-- Ngày tạo bài viết -->
+                            <p class="text-muted small">
+                                <i class="fa fa-calendar me-1"></i> @Model.CreateDate?.ToString("dd/MM/yyyy")
+                            </p>
+
+                            <!-- Hình ảnh bài viết -->
+                            @if (!string.IsNullOrEmpty(Model.Thumb))
+                            {
+                                <img src="@Model.Thumb" class="img-fluid rounded mb-3" alt="@Model.Title">
+                            }
+
+                            <!-- Nội dung bài viết -->
+                            <div class="blog-content">
+                                @Html.Raw(Model.Contents)
+                            </div>
+                        </article>
+                    }
+                    else
+                    {
+                        <!-- Begin Error 404 Area -->
+                        <div class="error-404-area section-space-top-100">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="error-404-content">
+                                            <h1 class="title mb-5">404</h1>
+                                            <h2 class="sub-title mb-4">Page Cannot Be Found!</h2>
+                                            <p class="short-desc mb-7">
+                                                Seems like nothing was found at this location. Try something else or you can go back to the homepage following the button below!
+                                            </p>
+                                            <div class="button-wrap">
+                                                <a class="btn btn-custom-size lg-size btn-primary btn-secondary-hover rounded-0" href="/">Back to home</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Error 404 Area End Here -->
+                    }
+                </div>
+
+                <div class="col-lg-3 order-2 pt-10 pt-lg-0">
+                    @if (ViewBag.Pages != null)
+                    {
+                        @await Html.PartialAsync("_SidebarPages", (List<Page>)ViewBag.Pages)
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+

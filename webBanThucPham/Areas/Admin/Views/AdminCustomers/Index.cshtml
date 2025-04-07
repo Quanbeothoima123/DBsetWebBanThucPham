@@ -1,0 +1,128 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<webBanThucPham.Models.Customer>
+@{
+    ViewData["Title"] = "Danh sách khách hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Quản lý khách hàng</h3>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select class="form-select" id="filterStatus">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Bị khóa</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" id="searchBox" placeholder="Tìm kiếm theo tên hoặc email...">
+        </div>
+    </div>
+
+    <!-- Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Họ & Tên</th>
+                    <th>Ngày sinh</th>
+                    <th>Địa chỉ</th>
+                    <th>Email</th>
+                    <th>Điện thoại</th>
+                    <th>Quận / Huyện</th>
+                    <th>Phường / Xã</th>
+                    <th>Lần đăng nhập cuối</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.CustomerId</td>
+                        <td>@item.FullName</td>
+                        <td>@(item.Birthday?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                        <td>@item.Address</td>
+                        <td>@item.Email</td>
+                        <td>@item.Phone</td>
+                        <td>@item.District</td>
+                        <td>@item.Ward</td>
+                        <td>@(item.LastLogin?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa đăng nhập")</td>
+                        <td>
+                            <span class="badge @(item.Active == true ? "bg-success" : "bg-danger")">
+                                @(item.Active == true ? "Hoạt động" : "Bị khóa")
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.CustomerId" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square"></i> Sửa
+                            </a>
+                            <a asp-action="Details" asp-route-id="@item.CustomerId" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> Chi tiết
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.CustomerId" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa khách hàng này?');">
+                                <i class="bi bi-trash"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div> <!-- Kết thúc div.table-responsive -->
+    <!-- Phân trang -->
+    <div class="d-flex justify-content-center mt-4">
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }),
+                 new X.PagedList.Web.Common.PagedListRenderOptions
+        {
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" }
+        })
+    </div>
+
+</div> <!-- Kết thúc div.container -->
+
+<script>
+    document.getElementById("searchBox").addEventListener("input", function () {
+        var searchText = this.value.toLowerCase();
+        var rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(function (row) {
+            var name = row.cells[1].textContent.toLowerCase();
+            var email = row.cells[4].textContent.toLowerCase();
+
+            if (name.includes(searchText) || email.includes(searchText)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+
+    document.getElementById("filterStatus").addEventListener("change", function () {
+        var selectedStatus = this.value;
+        var rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(function (row) {
+            var status = row.cells[9].textContent.trim();
+
+            if (selectedStatus === "active" && status === "Hoạt động") {
+                row.style.display = "";
+            } else if (selectedStatus === "inactive" && status === "Bị khóa") {
+                row.style.display = "";
+            } else if (selectedStatus === "") {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+</script>
+
+
