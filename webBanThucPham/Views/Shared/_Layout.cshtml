@@ -34,13 +34,29 @@
 
 </head>
 
+
 <body>
 
     <div class="main-wrapper">
 
+
+
         <!-- Begin Main Header Area -->
         @await Html.PartialAsync("_HeaderPartialView.cshtml")
         <!-- Main Header Area End Here -->
+        <!-- THÔNG BÁO TOAST/ALERT -->
+        @if (TempData["AddToCartError"] != null)
+        {
+            <div class="alert alert-danger text-center" role="alert" style="z-index: 9999;">
+                @TempData["AddToCartError"]
+            </div>
+        }
+        @if (TempData["AddToCartSuccess"] != null)
+        {
+            <div class="alert alert-success text-center" role="alert" style="z-index: 9999;">
+                @TempData["AddToCartSuccess"]
+            </div>
+        }
         @RenderBody();
         <!-- Begin Footer Area -->
         @await Html.PartialAsync("_FooterPartialView.cshtml")
@@ -76,6 +92,19 @@
     <script src="~/assets/js/main.js"></script>
     @await Component.InvokeAsync("Notyf")
     @await RenderSectionAsync("Scripts", required: false)
+
+    @section Scripts {
+        <script>
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(el => {
+                    el.style.transition = 'opacity 0.5s ease';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 500);
+                });
+            }, 3000);
+        </script>
+    }
+
 
 </body>
 

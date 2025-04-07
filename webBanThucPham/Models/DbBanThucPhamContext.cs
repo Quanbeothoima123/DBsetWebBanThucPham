@@ -159,7 +159,6 @@ public partial class DbBanThucPhamContext : DbContext
 
             entity.Property(e => e.CartItemId).HasColumnName("CartItemID");
             entity.Property(e => e.CartId).HasColumnName("CartID");
-            entity.Property(e => e.Price).HasPrecision(10, 2);
             entity.Property(e => e.ProductId).HasColumnName("ProductID");
             entity.Property(e => e.Quantity).HasDefaultValueSql("'1'");
 

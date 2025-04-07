@@ -1,0 +1,59 @@
+﻿@model dynamic
+@{
+    var cartItems = Model?.CartItems ?? new List<dynamic>();
+    var totalAmount = Model?.TotalAmount ?? 0;
+    var userEmail = Context.Session.GetString("UserEmail");
+}
+
+<div class="offcanvas-minicart_wrapper" id="miniCart">
+    <div class="harmic-offcanvas-body">
+        <div class="minicart-content">
+            <div class="minicart-heading">
+                <h4 class="mb-0">Shopping Cart</h4>
+                <a href="#" class="button-close"><i class="pe-7s-close"></i></a>
+            </div>
+            @if (string.IsNullOrEmpty(userEmail))
+            {
+                <p class="alert alert-warning">Bạn cần đăng nhập để xem giỏ hàng!</p>
+            }
+            else
+            {
+                <ul class="minicart-list">
+                    @foreach (var item in cartItems)
+                    {
+                        <li class="minicart-product">
+                            <a class="product-item_remove" href="#" data-productid="@item.ProductId" onclick="removeFromCart(@item.ProductId)">
+                                <i class="pe-7s-close"></i>
+                            </a>
+                            <a href="@Url.Action("Details", "Product", new { id = item.ProductId })" class="product-item_img">
+                                <img class="img-full" src="@item.ProductImage" alt="@item.ProductName">
+                            </a>
+                            <div class="product-item_content">
+                                <a class="product-item_title" href="@Url.Action("Details", "Product", new { id = item.ProductId })">@item.ProductName</a>
+                                <span class="product-item_quantity">
+                                    <input type="checkbox" class="product-checkbox" data-productid="@item.ProductId" />
+                                    @item.Quantity x $@item.Price
+                                </span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+        <div class="minicart-item_total">
+            <span>Subtotal</span>
+            <span class="ammount">$@totalAmount</span>
+        </div>
+        <div class="group-btn_wrap d-grid gap-2">
+            @if (string.IsNullOrEmpty(userEmail))
+            {
+                <a href="@Url.Action("Login", "CustomAccount")" class="btn btn-secondary btn-primary-hover">Login to View Cart</a>
+            }
+            else
+            {
+                <a href="@Url.Action("Index", "Cart")" class="btn btn-secondary btn-primary-hover">View Cart</a>
+                <a href="@Url.Action("Checkout", "Order")" class="btn btn-secondary btn-primary-hover" id="checkoutBtn">Checkout</a>
+            }
+        </div>
+    </div>
+</div>

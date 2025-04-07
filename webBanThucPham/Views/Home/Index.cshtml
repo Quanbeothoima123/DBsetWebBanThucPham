@@ -191,19 +191,26 @@
                                         <div class="col-xl-4 col-lg-4 col-sm-6 pt-6 pt-xl-0 product-item @(i >= 6 ? "hidden-product d-none" : "")" data-index="@i">
                                             <div class="product-box">
                                                 <div class="product-img img-zoom-effect">
-                                                    <a href="/san-pham/@product.Alias">
+                                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@product.ProductId">
                                                         <img class="img-full" src="@product.Thumb" alt="@product.ProductName">
                                                     </a>
                                                     <div class="product-add-action">
                                                         <ul>
-                                                            <li><a href="#"><i class="pe-7s-cart"></i></a></li>
+                                                            <li>
+                                                                <a asp-controller="Cart"
+                                                                   asp-action="AddToCart"
+                                                                   asp-route-productId="@product.ProductId"
+                                                                   title="Thêm vào giỏ">
+                                                                    <i class="pe-7s-cart"></i>
+                                                                </a>
+                                                            </li>
                                                             <li><a href="#"><i class="pe-7s-shuffle"></i></a></li>
-                                                            <li><a href="#"><i class="pe-7s-like"></i></a></li>
+                                                           
                                                         </ul>
                                                     </div>
                                                 </div>
                                                 <div class="product-content">
-                                                    <a class="product-name" href="/san-pham/@product.Alias">@product.ProductName</a>
+                                                    <a class="product-name" asp-controller="Product" asp-action="Details" asp-route-id="@product.ProductId">@product.ProductName</a>
                                                     <div class="price-box pb-1">
                                                         <span class="new-price">$@product.Price</span>
                                                     </div>

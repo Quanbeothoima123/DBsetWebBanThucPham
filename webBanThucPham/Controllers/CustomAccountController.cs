@@ -150,7 +150,7 @@ namespace webBanThucPham.Controllers
             // Lưu thông tin đăng nhập vào Session
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserName", user.FullName);
-
+            HttpContext.Session.SetInt32("CustomerId", user.CustomerId);
             return RedirectToAction("Index", "Home");
         }
 

@@ -1,6 +1,7 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using webBanThucPham.Models;
 
 namespace webBanThucPham.Controllers;
@@ -19,6 +20,41 @@ public class HomeController : Controller
     }
     public IActionResult Index()
     {
+        var userCustomID = HttpContext.Session.GetInt32("CustomerId");
+
+        // Neu nguoi dung da dang nhap , lay thong tin cua gio hang
+        if (userCustomID.HasValue)
+        {
+            var cartItems = _context.Cartitems
+                .Where(ci => ci.Cart.CustomerId == userCustomID)
+                .Include(ci => ci.Product)  // Bao gom thong tin san pham
+                .ToList();
+
+            // Tinh tong gia tri cua gio hang
+            var totalAmount = cartItems.Sum(ci => ci.Quantity * ci.Price);
+
+            // Truyen gio hang vao  ViewBag, bao gom thong tin Thumb tu Product
+            ViewBag.CartItems = cartItems.Select(ci => new
+            {
+                ci.CartItemId,
+                ci.ProductId,
+                ci.Quantity,
+                ci.Price,
+                ProductName = ci.Product.ProductName,
+                ProductThumb = ci.Product.Thumb,  // Lay Thumb tu Product
+                ProductPrice = ci.Product.Price
+            }).ToList();
+
+            ViewBag.TotalAmount = totalAmount;
+        }
+        else
+        {
+            //Neu chua dang nhap gio hang se trong
+            ViewBag.CartItems = new List<object>();  // De tranh loi khi gio hang trong
+            ViewBag.TotalAmount = 0;
+        }
+
+
         var categories = _context.Categories
             .Where(c => c.CatId >= 1 && c.CatId <= 10)
             .ToList();
@@ -38,7 +74,7 @@ public class HomeController : Controller
 
         ViewBag.ProductsByCategory = productsByCategory;
 
-        // Lay danh sach bai viet moi (IsNewfeed = true v� Published = true)
+        // Lay danh sach bai viet moi (IsNewfeed = true và Published = true)
         var newfeedPosts = _context.Tintucs
             .Where(t => t.IsNewfeed == true && t.Published == true)
             .OrderByDescending(t => t.CreatedDate)
@@ -47,7 +83,6 @@ public class HomeController : Controller
         ViewBag.NewfeedPosts = newfeedPosts;
         return View();
     }
-
 
     public IActionResult Contact()
     {
