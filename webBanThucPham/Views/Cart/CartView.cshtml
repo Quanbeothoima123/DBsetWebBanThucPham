@@ -10,6 +10,14 @@
 
 <div class="container py-4">
     <h2 class="mb-4">Giỏ hàng của bạn</h2>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
 
     @if (!itemList.Any())
     {
@@ -40,7 +48,7 @@
                                     <input type="checkbox" name="selectedItems" value="@item.CartItemId" class="form-check-input" />
                                 </td>
                                 <td>
-                                    <a href="@Url.Action("Detail", "Product", new { id = item.ProductId })">
+                                    <a href="@Url.Action("Details", "Product", new { id = item.ProductId })">
                                         <img src="@item.Product.Thumb" alt="@item.Product.ProductName" style="width: 80px;" class="img-thumbnail" />
                                     </a>
                                 </td>
@@ -48,17 +56,32 @@
                                 <td>@string.Format(culture, "{0:C0}", item.Price)</td>
                                 <td>
                                     <div class="input-group justify-content-center">
-                                        <a class="btn btn-outline-secondary" href="@Url.Action("DecreaseQuantity", "Cart", new { id = item.CartItemId })">-</a>
-                                        <input type="text" class="form-control text-center" value="@item.Quantity" readonly style="max-width: 50px;" />
-                                        <a class="btn btn-outline-secondary" href="@Url.Action("IncreaseQuantity", "Cart", new { id = item.CartItemId })">+</a>
+                                        <!-- Các nút tăng/giảm sẽ gọi Ajax -->
+                                        <button type="button" class="btn btn-outline-secondary decrease-btn" data-id="@item.CartItemId">-</button>
+
+                                        <input type="text"
+                                               class="form-control text-center quantity-input"
+                                               value="@item.Quantity"
+                                               readonly
+                                               style="max-width: 50px;"
+                                               data-id="@item.CartItemId"
+                                               data-price="@item.Price"
+                                               data-total-cell-id="total-@item.CartItemId" />
+
+                                        <button type="button" class="btn btn-outline-secondary increase-btn" data-id="@item.CartItemId">+</button>
                                     </div>
                                 </td>
-                                <td>@string.Format(culture, "{0:C0}", item.Quantity * item.Price)</td>
+                                <td id="total-@item.CartItemId">
+                                    @string.Format(culture, "{0:C0}", item.Quantity * item.Price)
+                                </td>
                                 <td>
-                                    <a class="btn btn-sm btn-danger" href="@Url.Action("RemoveItem", "Cart", new { id = item.CartItemId })">
+                                    <a class="btn btn-sm btn-danger"
+                                       href="@Url.Action("RemoveItem", "Cart", new { id = item.CartItemId })"
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng không?');">
                                         <i class="bi bi-trash-fill"></i> Xóa
                                     </a>
                                 </td>
+
                             </tr>
                         }
                     </tbody>
@@ -101,6 +124,46 @@
             if (shownCount >= rows.length) {
                 this.style.display = 'none';
             }
+        });
+         // Hàm cập nhật ô thành tiền dựa vào số lượng mới và giá
+        function updateTotal(cartItemId, newQuantity) {
+            const input = $('.quantity-input[data-id="' + cartItemId + '"]');
+            const price = parseFloat(input.data('price'));
+            const newTotal = newQuantity * price;
+            const formatter = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            });
+            const totalCellId = input.data('total-cell-id');
+            $('#' + totalCellId).text(formatter.format(newTotal));
+        }
+
+        // Xử lý tăng số lượng bằng AJAX
+        $('.increase-btn').on('click', function (e) {
+            e.preventDefault();
+            var cartItemId = $(this).data('id');
+            var input = $('.quantity-input[data-id="' + cartItemId + '"]');
+
+            $.post('@Url.Action("IncreaseQuantityAjax", "Cart")', { id: cartItemId }, function (res) {
+                if (res.success) {
+                    input.val(res.quantity);
+                    updateTotal(cartItemId, res.quantity);
+                }
+            });
+        });
+
+        // Xử lý giảm số lượng bằng AJAX
+        $('.decrease-btn').on('click', function (e) {
+            e.preventDefault();
+            var cartItemId = $(this).data('id');
+            var input = $('.quantity-input[data-id="' + cartItemId + '"]');
+
+            $.post('@Url.Action("DecreaseQuantityAjax", "Cart")', { id: cartItemId }, function (res) {
+                if (res.success) {
+                    input.val(res.quantity);
+                    updateTotal(cartItemId, res.quantity);
+                }
+            });
         });
     </script>
 }

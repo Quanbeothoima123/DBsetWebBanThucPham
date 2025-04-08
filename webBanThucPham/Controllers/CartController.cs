@@ -139,5 +139,62 @@ namespace webBanThucPham.Controllers
 
             return View(cart.Cartitems.ToList());
         }
+
+        [HttpGet]
+        public IActionResult RemoveItem(int id)
+        {
+            // Lấy CustomerId từ session để đảm bảo người dùng có quyền với cart item này
+            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (customerId == null)
+            {
+                TempData["ErrorMessage"] = "Bạn cần đăng nhập để thực hiện hành động này.";
+                return RedirectToAction("Login", "CustomAccount");
+            }
+
+            // Tìm cart item theo id và kiểm tra xem có thuộc cart của người dùng không
+            var cartItem = _context.Cartitems
+                .Include(ci => ci.Cart)
+                .FirstOrDefault(ci => ci.CartItemId == id && ci.Cart.CustomerId == customerId);
+
+            if (cartItem != null)
+            {
+                _context.Cartitems.Remove(cartItem);
+                _context.SaveChanges();
+                TempData["SuccessMessage"] = "Đã xóa sản phẩm khỏi giỏ hàng.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy sản phẩm hoặc bạn không có quyền xóa.";
+            }
+
+            return RedirectToAction("CartView");
+        }
+
+        [HttpPost]
+        public IActionResult IncreaseQuantityAjax(int id)
+        {
+            var item = _context.Cartitems.FirstOrDefault(x => x.CartItemId == id);
+            if (item != null)
+            {
+                item.Quantity++;
+                _context.SaveChanges();
+                return Json(new { success = true, quantity = item.Quantity });
+            }
+            return Json(new { success = false });
+        }
+
+        [HttpPost]
+        public IActionResult DecreaseQuantityAjax(int id)
+        {
+            var item = _context.Cartitems.FirstOrDefault(x => x.CartItemId == id);
+            if (item != null && item.Quantity > 1)
+            {
+                item.Quantity--;
+                _context.SaveChanges();
+                return Json(new { success = true, quantity = item.Quantity });
+            }
+            return Json(new { success = false });
+        }
+
     }
 }
