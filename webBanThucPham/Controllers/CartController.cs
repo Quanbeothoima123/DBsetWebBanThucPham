@@ -196,5 +196,63 @@ namespace webBanThucPham.Controllers
             return Json(new { success = false });
         }
 
+        public IActionResult CheckoutView(int[] selectedItems)
+        {
+            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (customerId == null)
+                return RedirectToAction("Login", "CustomAccount");
+
+            var cartItems = _context.Cartitems
+                .Include(c => c.Product)
+                .Where(c => selectedItems.Contains(c.CartItemId) && c.Cart.CustomerId == customerId)
+                .ToList();
+
+            return View(cartItems);
+        }
+
+
+        [HttpPost]
+        public IActionResult Checkout(int[] selectedItems, int[] quantities, string paymentMethod)
+        {
+            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (customerId == null)
+            {
+                TempData["ErrorMessage"] = "Bạn cần đăng nhập để thanh toán.";
+                return RedirectToAction("Login", "CustomAccount");
+            }
+
+            for (int i = 0; i < selectedItems.Length; i++)
+            {
+                int cartItemId = selectedItems[i];
+                int newQuantity = quantities[i];
+
+                var cartItem = _context.Cartitems
+                    .Include(ci => ci.Product)
+                    .FirstOrDefault(ci => ci.CartItemId == cartItemId && ci.Cart.CustomerId == customerId);
+
+                if (cartItem != null)
+                {
+                    int availableStock = cartItem.Product.UnitsInStock ?? 0;
+
+                    if (newQuantity <= availableStock)
+                    {
+                        cartItem.Product.UnitsInStock = availableStock - newQuantity;
+                        cartItem.Quantity = newQuantity;
+                        // => sau này: tạo OrderItem
+                    }
+                    else
+                    {
+                        _context.Cartitems.Remove(cartItem);
+                    }
+                }
+            }
+
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Thanh toán thành công bằng: " + paymentMethod;
+            return RedirectToAction("CheckoutSuccess"); // sẽ tạo sau
+        }
+
+
     }
 }
