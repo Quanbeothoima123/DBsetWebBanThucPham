@@ -37,6 +37,8 @@ public partial class Customer
 
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 
+    public virtual ICollection<Deliveryaddress> Deliveryaddresses { get; set; } = new List<Deliveryaddress>();
+
     public virtual Location? Location { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();

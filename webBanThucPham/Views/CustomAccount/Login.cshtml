@@ -65,9 +65,20 @@
 </div>
 
 <script>
-    document.getElementById("sendOtp").addEventListener("click", function () {
-        let email = document.getElementById("otpEmail").value;
-        let messageBox = document.getElementById("message");
+    const sendBtn = document.getElementById("sendOtp");
+    const verifyBtn = document.getElementById("verifyOtp");
+    const verifyForm = document.getElementById("verifyOtpForm");
+    const messageBox = document.getElementById("message");
+    const otpInput = document.getElementById("otpCode");
+    const emailInput = document.getElementById("otpEmail");
+
+    let countdownInterval;
+    let resendCooldownInterval;
+
+    // Gửi mã OTP
+    sendBtn.addEventListener("click", function () {
+        let email = emailInput.value;
+        if (!email) return alert("Vui lòng nhập email!");
 
         fetch("/CustomAccount/SendOtp", {
             method: "POST",
@@ -77,20 +88,24 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                messageBox.className = "alert alert-success";
-                document.getElementById("verifyOtpForm").classList.remove("d-none");
+                showMessage("success", data.message);
+                verifyForm.classList.remove("d-none");
+                otpInput.disabled = false;
+
+                startCountdown(300);         // Đếm ngược 5 phút (300 giây)
+                startResendCooldown(60);     // 60s mới được gửi lại mã
             } else {
-                messageBox.className = "alert alert-danger";
+                showMessage("danger", data.message);
             }
-            messageBox.innerText = data.message;
-            messageBox.classList.remove("d-none");
         });
     });
 
-    document.getElementById("verifyOtp").addEventListener("click", function () {
-        let email = document.getElementById("otpEmail").value;
-        let otp = document.getElementById("otpCode").value;
-        let messageBox = document.getElementById("message");
+    // Xác nhận mã OTP
+    verifyBtn.addEventListener("click", function () {
+        let email = emailInput.value;
+        let otp = otpInput.value;
+
+        if (!otp) return alert("Vui lòng nhập mã OTP!");
 
         fetch("/CustomAccount/VerifyOtp", {
             method: "POST",
@@ -100,13 +115,53 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                messageBox.className = "alert alert-success";
+                showMessage("success", data.message);
+                clearInterval(countdownInterval);
                 setTimeout(() => window.location.href = "/Home/Index", 2000);
             } else {
-                messageBox.className = "alert alert-danger";
+                showMessage("danger", data.message);
             }
-            messageBox.innerText = data.message;
-            messageBox.classList.remove("d-none");
         });
     });
+
+    // Hiển thị thông báo
+    function showMessage(type, text) {
+        messageBox.className = `alert alert-${type}`;
+        messageBox.innerText = text;
+        messageBox.classList.remove("d-none");
+    }
+
+    // Bắt đầu đếm ngược hiệu lực mã OTP (5 phút)
+    function startCountdown(seconds) {
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            seconds--;
+            let min = Math.floor(seconds / 60);
+            let sec = seconds % 60;
+            otpInput.placeholder = `Mã hết hạn sau ${min}:${sec.toString().padStart(2, '0')}`;
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                otpInput.disabled = true;
+                showMessage("danger", "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
+            }
+        }, 1000);
+    }
+
+    // Chặn spam gửi mã (cooldown 60s)
+    function startResendCooldown(seconds) {
+        sendBtn.disabled = true;
+        let originalText = sendBtn.textContent;
+
+        resendCooldownInterval = setInterval(() => {
+            sendBtn.textContent = `Gửi lại (${seconds}s)`;
+            seconds--;
+
+            if (seconds < 0) {
+                clearInterval(resendCooldownInterval);
+                sendBtn.disabled = false;
+                sendBtn.textContent = originalText;
+            }
+        }, 1000);
+    }
 </script>
+

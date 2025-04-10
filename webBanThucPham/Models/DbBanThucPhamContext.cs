@@ -30,6 +30,8 @@ public partial class DbBanThucPhamContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
 
+    public virtual DbSet<Deliveryaddress> Deliveryaddresses { get; set; }
+
     public virtual DbSet<Efmigrationshistory> Efmigrationshistories { get; set; }
 
     public virtual DbSet<Location> Locations { get; set; }
@@ -236,6 +238,25 @@ public partial class DbBanThucPhamContext : DbContext
                 .HasForeignKey(d => d.LocationId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("customers_ibfk_1");
+        });
+
+        modelBuilder.Entity<Deliveryaddress>(entity =>
+        {
+            entity.HasKey(e => e.DeliveryAddressId).HasName("PRIMARY");
+
+            entity.ToTable("deliveryaddresses");
+
+            entity.HasIndex(e => e.CustomerId, "CustomerID");
+
+            entity.Property(e => e.DeliveryAddressId).HasColumnName("DeliveryAddressID");
+            entity.Property(e => e.CustomerId).HasColumnName("CustomerID");
+            entity.Property(e => e.NameAddress).HasColumnType("text");
+            entity.Property(e => e.PhoneNumber).HasMaxLength(12);
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Deliveryaddresses)
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("deliveryaddresses_ibfk_1");
         });
 
         modelBuilder.Entity<Efmigrationshistory>(entity =>

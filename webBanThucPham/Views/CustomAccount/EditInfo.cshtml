@@ -1,0 +1,102 @@
+﻿@model EditInfoViewModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h3 class="mb-4">Thông tin tài khoản</h3>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="EditInfo" method="post">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label>Ảnh đại diện</label>
+                <div class="border p-2 rounded">
+                    <img src="@Model.Avatar ?? " /images/default-avatar.png"" class="img-fluid" alt="Avatar">
+                </div>
+                <input asp-for="Avatar" class="form-control mt-2" placeholder="URL ảnh hoặc đường dẫn tạm" />
+            </div>
+            <div class="col-md-9">
+                <div class="mb-3">
+                    <label>Họ và tên</label>
+                    <input asp-for="FullName" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label>Ngày sinh</label>
+                    <input asp-for="Birthday" type="date" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label>Địa chỉ mặc định</label>
+                    <div class="row">
+                        <div class="col-md-12 mb-1"><input asp-for="DefaultAddress.Street" class="form-control" placeholder="Số nhà, tên ngõ" /></div>
+                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.Ward" class="form-control" placeholder="Xã/Phường" required /></div>
+                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.District" class="form-control" placeholder="Quận/Huyện" required /></div>
+                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.Province" class="form-control" placeholder="Tỉnh/Thành phố" required /></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input asp-for="Email" class="form-control" readonly />
+                </div>
+                <div class="mb-3">
+                    <label>Số điện thoại</label>
+                    <input asp-for="Phone" class="form-control" pattern="[0-9]{10}" title="Số điện thoại phải gồm 10 chữ số" />
+                </div>
+                <div class="mb-3">
+                    <label>Last login</label>
+                    <input asp-for="LastLogin" class="form-control" readonly />
+                </div>
+            </div>
+        </div>
+
+        <h4>Địa chỉ giao hàng khác</h4>
+        @for (int i = 0; i < Model.DeliveryAddresses.Count; i++)
+        {
+            var item = Model.DeliveryAddresses[i];
+            <div class="border rounded p-3 mb-3">
+                <input type="hidden" asp-for="DeliveryAddresses[@i].DeliveryAddressID" />
+                <input type="hidden" name="DeliveryAddresses[@i].IsEditing" value="@item.IsEditing" />
+                @if (!item.IsEditing)
+                {
+                    <div>
+                        <strong>Địa chỉ:</strong> @item.Address.Street, @item.Address.Ward, @item.Address.District, @item.Address.Province <br />
+                        <strong>Số điện thoại:</strong> @item.PhoneNumber <br />
+                        <button type="submit" name="editIndex" value="@i" class="btn btn-sm btn-warning mt-2">Chỉnh sửa</button>
+                        <button type="submit" name="deleteIndex" value="@i" class="btn btn-sm btn-danger mt-2">Xóa</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col-md-12 mb-1">
+                            <input asp-for="DeliveryAddresses[@i].Address.Street" class="form-control" placeholder="Số nhà, tên ngõ" />
+                        </div>
+                        <div class="col-md-4 mb-1">
+                            <input asp-for="DeliveryAddresses[@i].Address.Ward" class="form-control" placeholder="Xã/Phường" required />
+                        </div>
+                        <div class="col-md-4 mb-1">
+                            <input asp-for="DeliveryAddresses[@i].Address.District" class="form-control" placeholder="Quận/Huyện" required />
+                        </div>
+                        <div class="col-md-4 mb-1">
+                            <input asp-for="DeliveryAddresses[@i].Address.Province" class="form-control" placeholder="Tỉnh/Thành phố" required />
+                        </div>
+                        <div class="col-md-12 mb-2">
+                            <input asp-for="DeliveryAddresses[@i].PhoneNumber" class="form-control" pattern="[0-9]{10}" title="Số điện thoại phải gồm 10 chữ số" />
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-success">Cập nhật</button>
+                    </div>
+                }
+            </div>
+        }
+
+        <button type="submit" name="addAddress" value="true" class="btn btn-primary mb-3">+ Thêm địa chỉ</button>
+        <br />
+        <button type="submit" class="btn btn-success">Cập nhật thông tin</button>
+        <a href="/" class="btn btn-secondary">Quay lại</a>
+    </form>
+</div>
