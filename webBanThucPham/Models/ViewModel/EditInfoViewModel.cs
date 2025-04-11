@@ -2,15 +2,17 @@
 
 public class EditInfoViewModel
 {
-    public string FullName { get; set; }
-    public DateTime? Birthday { get; set; }
     public string? Avatar { get; set; }
-
-    public AddressVM DefaultAddress { get; set; } = new(); // từ Customer.Address
-    public string Email { get; set; }
-    public string Phone { get; set; } // Phone mặc định
-
+    public string? FullName { get; set; }
+    public DateTime? Birthday { get; set; }
+    public string Email { get; set; } = null!;
+    public string? Phone { get; set; }
     public DateTime? LastLogin { get; set; }
 
-    public List<DeliveryAddressVM> DeliveryAddresses { get; set; } = new(); // địa chỉ giao hàng
+    public AddressVM DefaultAddress { get; set; } = new AddressVM();
+
+    public List<DeliveryAddressVM> DeliveryAddresses { get; set; } = new List<DeliveryAddressVM>();
+
+    // Cho khối thêm địa chỉ mới
+    public bool AddingNewAddress { get; set; } = false;
 }

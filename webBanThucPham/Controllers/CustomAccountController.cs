@@ -8,6 +8,7 @@ using AspNetCoreHero.ToastNotification.Abstractions;
 using webBanThucPham.Models.ViewModels;
 using webBanThucPham.Models.ViewModel;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace webBanThucPham.Controllers
 {
@@ -235,86 +236,130 @@ namespace webBanThucPham.Controllers
             var customer = _context.Customers
                 .Include(c => c.Deliveryaddresses)
                 .FirstOrDefault(c => c.Email == email);
-
             if (customer == null) return NotFound();
 
-            // Tách địa chỉ mặc định (từ Customer.Address) thành AddressVM
             var addressParts = (customer.Address ?? "").Split('|');
             var defaultAddress = new AddressVM
             {
                 Street = addressParts.ElementAtOrDefault(0),
-                Ward = addressParts.ElementAtOrDefault(1) ?? "",
-                District = addressParts.ElementAtOrDefault(2) ?? "",
-                Province = addressParts.ElementAtOrDefault(3) ?? ""
+                Ward = addressParts.ElementAtOrDefault(1),
+                District = addressParts.ElementAtOrDefault(2),
+                Province = addressParts.ElementAtOrDefault(3)
             };
 
-            // Duyệt qua địa chỉ giao hàng
             var deliveryAddresses = customer.Deliveryaddresses.Select(d =>
             {
                 var parts = (d.NameAddress ?? "").Split('|');
                 return new DeliveryAddressVM
                 {
                     DeliveryAddressID = d.DeliveryAddressId,
-                    PhoneNumber = d.PhoneNumber ?? "",
+                    PhoneNumber = d.PhoneNumber,
+                    IsEditing = false,
                     Address = new AddressVM
                     {
                         Street = parts.ElementAtOrDefault(0),
-                        Ward = parts.ElementAtOrDefault(1) ?? "",
-                        District = parts.ElementAtOrDefault(2) ?? "",
-                        Province = parts.ElementAtOrDefault(3) ?? ""
+                        Ward = parts.ElementAtOrDefault(1),
+                        District = parts.ElementAtOrDefault(2),
+                        Province = parts.ElementAtOrDefault(3)
                     }
                 };
             }).ToList();
 
-            var model = new EditInfoViewModel
+            return View(new EditInfoViewModel
             {
                 FullName = customer.FullName,
                 Birthday = customer.Birthday,
                 Avatar = customer.Avatar,
-                Email = customer.Email ?? "",
-                Phone = customer.Phone ?? "",
+                Email = customer.Email,
+                Phone = customer.Phone,
                 LastLogin = customer.LastLogin,
                 DefaultAddress = defaultAddress,
                 DeliveryAddresses = deliveryAddresses
-            };
-
-            return View(model);
+            });
         }
 
 
-        [HttpPost]
-        public IActionResult EditInfo(EditInfoViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
 
+        [HttpPost]
+        public IActionResult EditInfo(EditInfoViewModel model, string? addAddress, string? confirmAdd, int? editIndex, int? deleteIndex, AddressVM? NewAddress, string? NewPhoneNumber)
+        {
             var customer = _context.Customers
                 .Include(c => c.Deliveryaddresses)
                 .FirstOrDefault(c => c.Email == model.Email);
+            if (customer == null) return NotFound();
 
-            if (customer == null)
-                return NotFound();
+            // Xử lý chỉnh sửa địa chỉ cụ thể
+            if (editIndex != null)
+            {
+                model.DeliveryAddresses[(int)editIndex].IsEditing = true;
+                return View(model);
+            }
 
+            // Xử lý xoá địa chỉ giao hàng
+            if (deleteIndex != null)
+            {
+                var toRemove = customer.Deliveryaddresses.FirstOrDefault(x => x.DeliveryAddressId == model.DeliveryAddresses[(int)deleteIndex].DeliveryAddressID);
+                if (toRemove != null) _context.Deliveryaddresses.Remove(toRemove);
+                _context.SaveChanges();
+                return RedirectToAction("EditInfo");
+            }
+
+            // Bắt đầu thêm địa chỉ mới
+            if (addAddress != null)
+            {
+                model.AddingNewAddress = true;
+                return View(model);
+            }
+
+            // Xác nhận thêm mới địa chỉ giao hàng
+            if (confirmAdd != null && NewAddress != null && !string.IsNullOrWhiteSpace(NewPhoneNumber))
+            {
+                if (!Regex.IsMatch(NewPhoneNumber, @"^\d{10}$"))
+                {
+                    ModelState.AddModelError("", "Số điện thoại phải gồm 10 chữ số.");
+                    model.AddingNewAddress = true;
+                    return View(model);
+                }
+
+                var newDelivery = new Deliveryaddress
+                {
+                    CustomerId = customer.CustomerId,
+                    PhoneNumber = NewPhoneNumber,
+                    NameAddress = string.Join('|', new[] {
+                NewAddress.Street,
+                NewAddress.Ward,
+                NewAddress.District,
+                NewAddress.Province
+            })
+                };
+                _context.Deliveryaddresses.Add(newDelivery);
+                _context.SaveChanges();
+                return RedirectToAction("EditInfo");
+            }
+
+            // Nếu có lỗi model thì trả lại view
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Cập nhật thông tin cá nhân
             customer.FullName = model.FullName;
             customer.Birthday = model.Birthday;
             customer.Avatar = model.Avatar;
             customer.Phone = model.Phone;
-
-            // Gộp DefaultAddress thành chuỗi
-            customer.Address = string.Join('|', new[]
-            {
+            customer.Address = string.Join('|', new[] {
         model.DefaultAddress.Street,
         model.DefaultAddress.Ward,
         model.DefaultAddress.District,
         model.DefaultAddress.Province
     });
 
-            // Cập nhật DeliveryAddresses
-            foreach (var addrVM in model.DeliveryAddresses)
+            // Cập nhật các địa chỉ giao hàng đang chỉnh sửa
+            for (int i = 0; i < model.DeliveryAddresses.Count; i++)
             {
-                var delivery = customer.Deliveryaddresses
-                    .FirstOrDefault(x => x.DeliveryAddressId == addrVM.DeliveryAddressID);
-
+                var addrVM = model.DeliveryAddresses[i];
+                var delivery = customer.Deliveryaddresses.FirstOrDefault(x => x.DeliveryAddressId == addrVM.DeliveryAddressID);
                 if (delivery != null)
                 {
                     delivery.PhoneNumber = addrVM.PhoneNumber;
@@ -326,7 +371,12 @@ namespace webBanThucPham.Controllers
                 addrVM.Address.Province
             });
                 }
+
+                // Reset trạng thái chỉnh sửa
+                model.DeliveryAddresses[i].IsEditing = false;
             }
+
+            model.AddingNewAddress = false;
 
             _context.SaveChanges();
             TempData["Success"] = "Thông tin đã được cập nhật!";

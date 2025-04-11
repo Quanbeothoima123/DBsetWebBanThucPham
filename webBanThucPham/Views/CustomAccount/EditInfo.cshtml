@@ -34,9 +34,9 @@
                     <label>Địa chỉ mặc định</label>
                     <div class="row">
                         <div class="col-md-12 mb-1"><input asp-for="DefaultAddress.Street" class="form-control" placeholder="Số nhà, tên ngõ" /></div>
-                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.Ward" class="form-control" placeholder="Xã/Phường" required /></div>
-                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.District" class="form-control" placeholder="Quận/Huyện" required /></div>
-                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.Province" class="form-control" placeholder="Tỉnh/Thành phố" required /></div>
+                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.Ward" class="form-control" placeholder="Phường/Xã" /></div>
+                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.District" class="form-control" placeholder="Quận/Huyện" /></div>
+                        <div class="col-md-4 mb-1"><input asp-for="DefaultAddress.Province" class="form-control" placeholder="Tỉnh/Thành phố" /></div>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -55,12 +55,12 @@
         </div>
 
         <h4>Địa chỉ giao hàng khác</h4>
+
         @for (int i = 0; i < Model.DeliveryAddresses.Count; i++)
         {
             var item = Model.DeliveryAddresses[i];
             <div class="border rounded p-3 mb-3">
                 <input type="hidden" asp-for="DeliveryAddresses[@i].DeliveryAddressID" />
-                <input type="hidden" name="DeliveryAddresses[@i].IsEditing" value="@item.IsEditing" />
                 @if (!item.IsEditing)
                 {
                     <div>
@@ -77,20 +77,45 @@
                             <input asp-for="DeliveryAddresses[@i].Address.Street" class="form-control" placeholder="Số nhà, tên ngõ" />
                         </div>
                         <div class="col-md-4 mb-1">
-                            <input asp-for="DeliveryAddresses[@i].Address.Ward" class="form-control" placeholder="Xã/Phường" required />
+                            <input asp-for="DeliveryAddresses[@i].Address.Ward" class="form-control" placeholder="Phường/Xã" />
                         </div>
                         <div class="col-md-4 mb-1">
-                            <input asp-for="DeliveryAddresses[@i].Address.District" class="form-control" placeholder="Quận/Huyện" required />
+                            <input asp-for="DeliveryAddresses[@i].Address.District" class="form-control" placeholder="Quận/Huyện" />
                         </div>
                         <div class="col-md-4 mb-1">
-                            <input asp-for="DeliveryAddresses[@i].Address.Province" class="form-control" placeholder="Tỉnh/Thành phố" required />
+                            <input asp-for="DeliveryAddresses[@i].Address.Province" class="form-control" placeholder="Tỉnh/Thành phố" />
                         </div>
                         <div class="col-md-12 mb-2">
-                            <input asp-for="DeliveryAddresses[@i].PhoneNumber" class="form-control" pattern="[0-9]{10}" title="Số điện thoại phải gồm 10 chữ số" />
+                            <input asp-for="DeliveryAddresses[@i].PhoneNumber" class="form-control" placeholder="Số điện thoại nhận hàng" pattern="[0-9]{10}" />
                         </div>
                         <button type="submit" class="btn btn-sm btn-success">Cập nhật</button>
                     </div>
                 }
+            </div>
+        }
+
+        @if (Model.AddingNewAddress)
+        {
+            <div class="border rounded p-3 mb-3 bg-light">
+                <h5>Thêm địa chỉ giao hàng mới</h5>
+                <div class="row">
+                    <div class="col-md-12 mb-1">
+                        <input name="NewAddress.Street" class="form-control" placeholder="Số nhà, tên ngõ" />
+                    </div>
+                    <div class="col-md-4 mb-1">
+                        <input name="NewAddress.Ward" class="form-control" placeholder="Phường/Xã" />
+                    </div>
+                    <div class="col-md-4 mb-1">
+                        <input name="NewAddress.District" class="form-control" placeholder="Quận/Huyện" />
+                    </div>
+                    <div class="col-md-4 mb-1">
+                        <input name="NewAddress.Province" class="form-control" placeholder="Tỉnh/Thành phố" />
+                    </div>
+                    <div class="col-md-12 mb-2">
+                        <input name="NewPhoneNumber" class="form-control" placeholder="Số điện thoại nhận hàng" pattern="[0-9]{10}" />
+                    </div>
+                    <button type="submit" name="confirmAdd" value="true" class="btn btn-sm btn-success">Lưu địa chỉ</button>
+                </div>
             </div>
         }
 
