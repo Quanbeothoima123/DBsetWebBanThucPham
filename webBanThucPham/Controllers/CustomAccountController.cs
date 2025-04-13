@@ -227,6 +227,7 @@ namespace webBanThucPham.Controllers
             return RedirectToAction("Login", "CustomAccount");
         }
 
+
         [HttpGet]
         public IActionResult EditInfo()
         {
@@ -254,7 +255,6 @@ namespace webBanThucPham.Controllers
                 {
                     DeliveryAddressID = d.DeliveryAddressId,
                     PhoneNumber = d.PhoneNumber,
-                    IsEditing = false,
                     Address = new AddressVM
                     {
                         Street = parts.ElementAtOrDefault(0),
@@ -278,108 +278,89 @@ namespace webBanThucPham.Controllers
             });
         }
 
-
-
         [HttpPost]
-        public IActionResult EditInfo(EditInfoViewModel model, string? addAddress, string? confirmAdd, int? editIndex, int? deleteIndex, AddressVM? NewAddress, string? NewPhoneNumber)
+        public IActionResult UpdateInfo(EditInfoViewModel model)
         {
-            var customer = _context.Customers
-                .Include(c => c.Deliveryaddresses)
-                .FirstOrDefault(c => c.Email == model.Email);
+            var email = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("Login");
+
+            var customer = _context.Customers.FirstOrDefault(c => c.Email == email);
             if (customer == null) return NotFound();
 
-            // Xử lý chỉnh sửa địa chỉ cụ thể
-            if (editIndex != null)
-            {
-                model.DeliveryAddresses[(int)editIndex].IsEditing = true;
-                return View(model);
-            }
-
-            // Xử lý xoá địa chỉ giao hàng
-            if (deleteIndex != null)
-            {
-                var toRemove = customer.Deliveryaddresses.FirstOrDefault(x => x.DeliveryAddressId == model.DeliveryAddresses[(int)deleteIndex].DeliveryAddressID);
-                if (toRemove != null) _context.Deliveryaddresses.Remove(toRemove);
-                _context.SaveChanges();
-                return RedirectToAction("EditInfo");
-            }
-
-            // Bắt đầu thêm địa chỉ mới
-            if (addAddress != null)
-            {
-                model.AddingNewAddress = true;
-                return View(model);
-            }
-
-            // Xác nhận thêm mới địa chỉ giao hàng
-            if (confirmAdd != null && NewAddress != null && !string.IsNullOrWhiteSpace(NewPhoneNumber))
-            {
-                if (!Regex.IsMatch(NewPhoneNumber, @"^\d{10}$"))
-                {
-                    ModelState.AddModelError("", "Số điện thoại phải gồm 10 chữ số.");
-                    model.AddingNewAddress = true;
-                    return View(model);
-                }
-
-                var newDelivery = new Deliveryaddress
-                {
-                    CustomerId = customer.CustomerId,
-                    PhoneNumber = NewPhoneNumber,
-                    NameAddress = string.Join('|', new[] {
-                NewAddress.Street,
-                NewAddress.Ward,
-                NewAddress.District,
-                NewAddress.Province
-            })
-                };
-                _context.Deliveryaddresses.Add(newDelivery);
-                _context.SaveChanges();
-                return RedirectToAction("EditInfo");
-            }
-
-            // Nếu có lỗi model thì trả lại view
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            // Cập nhật thông tin cá nhân
+            // Cập nhật thông tin cơ bản
             customer.FullName = model.FullName;
             customer.Birthday = model.Birthday;
             customer.Avatar = model.Avatar;
             customer.Phone = model.Phone;
-            customer.Address = string.Join('|', new[] {
-        model.DefaultAddress.Street,
-        model.DefaultAddress.Ward,
-        model.DefaultAddress.District,
-        model.DefaultAddress.Province
-    });
-
-            // Cập nhật các địa chỉ giao hàng đang chỉnh sửa
-            for (int i = 0; i < model.DeliveryAddresses.Count; i++)
-            {
-                var addrVM = model.DeliveryAddresses[i];
-                var delivery = customer.Deliveryaddresses.FirstOrDefault(x => x.DeliveryAddressId == addrVM.DeliveryAddressID);
-                if (delivery != null)
-                {
-                    delivery.PhoneNumber = addrVM.PhoneNumber;
-                    delivery.NameAddress = string.Join('|', new[]
-                    {
-                addrVM.Address.Street,
-                addrVM.Address.Ward,
-                addrVM.Address.District,
-                addrVM.Address.Province
-            });
-                }
-
-                // Reset trạng thái chỉnh sửa
-                model.DeliveryAddresses[i].IsEditing = false;
-            }
-
-            model.AddingNewAddress = false;
+            customer.Address = $"{model.DefaultAddress.Street}|{model.DefaultAddress.Ward}|{model.DefaultAddress.District}|{model.DefaultAddress.Province}";
 
             _context.SaveChanges();
-            TempData["Success"] = "Thông tin đã được cập nhật!";
+            TempData["Success"] = "Cập nhật thông tin thành công!";
+            return RedirectToAction("EditInfo");
+        }
+
+        [HttpPost]
+        public IActionResult AddDeliveryAddress(DeliveryAddressVM newAddress)
+        {
+            var email = HttpContext.Session.GetString("UserEmail");
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("Login");
+
+            var customer = _context.Customers.FirstOrDefault(c => c.Email == email);
+            if (customer == null) return NotFound();
+
+            // Kiểm tra hợp lệ
+            if (string.IsNullOrWhiteSpace(newAddress.Address?.Street) ||
+                string.IsNullOrWhiteSpace(newAddress.Address?.Ward) ||
+                string.IsNullOrWhiteSpace(newAddress.Address?.District) ||
+                string.IsNullOrWhiteSpace(newAddress.Address?.Province) ||
+                string.IsNullOrWhiteSpace(newAddress.PhoneNumber) ||
+                !System.Text.RegularExpressions.Regex.IsMatch(newAddress.PhoneNumber, @"^\d{10}$"))
+            {
+                TempData["Error"] = "Vui lòng nhập đầy đủ và hợp lệ các thông tin địa chỉ.";
+                return RedirectToAction("EditInfo");
+            }
+
+            var addressString = $"{newAddress.Address.Street}|{newAddress.Address.Ward}|{newAddress.Address.District}|{newAddress.Address.Province}";
+
+            var address = new Deliveryaddress
+            {
+                CustomerId = customer.CustomerId,
+                NameAddress = addressString,
+                PhoneNumber = newAddress.PhoneNumber
+            };
+
+            _context.Deliveryaddresses.Add(address);
+            _context.SaveChanges();
+
+            TempData["Success"] = "Thêm địa chỉ mới thành công!";
+            return RedirectToAction("EditInfo");
+        }
+
+
+        [HttpPost]
+        public IActionResult EditDeliveryAddress(int id, DeliveryAddressVM updatedAddress)
+        {
+            var address = _context.Deliveryaddresses.FirstOrDefault(a => a.DeliveryAddressId == id);
+            if (address == null) return NotFound();
+
+            address.NameAddress = $"{updatedAddress.Address.Street}|{updatedAddress.Address.Ward}|{updatedAddress.Address.District}|{updatedAddress.Address.Province}";
+            address.PhoneNumber = updatedAddress.PhoneNumber;
+
+            _context.SaveChanges();
+            TempData["Success"] = "Cập nhật địa chỉ thành công!";
+            return RedirectToAction("EditInfo");
+        }
+
+        [HttpPost]
+        public IActionResult DeleteDeliveryAddress(int id)
+        {
+            var address = _context.Deliveryaddresses.FirstOrDefault(a => a.DeliveryAddressId == id);
+            if (address == null) return NotFound();
+
+            _context.Deliveryaddresses.Remove(address);
+            _context.SaveChanges();
+
+            TempData["Success"] = "Xóa địa chỉ thành công!";
             return RedirectToAction("EditInfo");
         }
 
