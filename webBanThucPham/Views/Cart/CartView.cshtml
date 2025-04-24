@@ -34,6 +34,7 @@
                             <th>Hình ảnh</th>
                             <th>Tên sản phẩm</th>
                             <th>Giá</th>
+                            <th>Giảm giá</th>
                             <th>Số lượng</th>
                             <th>Thành tiền</th>
                             <th>Xóa</th>
@@ -43,6 +44,13 @@
                         @for (int i = 0; i < itemList.Count; i++)
                         {
                             var item = itemList[i];
+                            var product = item.Product;
+                            var price = product.Price ?? 0;
+                            var discount = product.Discount ?? 0;
+                            var quantity = item.Quantity;
+                            var discountPrice = price - (price * discount / 100);
+                            var total = discountPrice * quantity;
+
                             <tr class="cart-item-row @(i >= 5 ? "d-none" : "")">
                                 <td>
                                     <input type="checkbox" name="selectedItems" value="@item.CartItemId" class="form-check-input" />
@@ -52,27 +60,25 @@
                                         <img src="@item.Product.Thumb" alt="@item.Product.ProductName" style="width: 80px;" class="img-thumbnail" />
                                     </a>
                                 </td>
-                                <td>@item.Product.ProductName</td>
-                                <td>@string.Format(culture, "{0:C0}", item.Price)</td>
+                                <td>@product.ProductName</td>
+                                <td>@string.Format(culture, "{0:C0}", price)</td>
+                                <td>@discount%</td>
                                 <td>
                                     <div class="input-group justify-content-center">
-                                        <!-- Các nút tăng/giảm sẽ gọi Ajax -->
                                         <button type="button" class="btn btn-outline-secondary decrease-btn" data-id="@item.CartItemId">-</button>
-
                                         <input type="text"
                                                class="form-control text-center quantity-input"
                                                value="@item.Quantity"
                                                readonly
                                                style="max-width: 50px;"
                                                data-id="@item.CartItemId"
-                                               data-price="@item.Price"
+                                               data-price="@discountPrice"
                                                data-total-cell-id="total-@item.CartItemId" />
-
                                         <button type="button" class="btn btn-outline-secondary increase-btn" data-id="@item.CartItemId">+</button>
                                     </div>
                                 </td>
                                 <td id="total-@item.CartItemId">
-                                    @string.Format(culture, "{0:C0}", item.Quantity * item.Price)
+                                    @string.Format(culture, "{0:C0}", total)
                                 </td>
                                 <td>
                                     <a class="btn btn-sm btn-danger"
@@ -81,7 +87,6 @@
                                         <i class="bi bi-trash-fill"></i> Xóa
                                     </a>
                                 </td>
-
                             </tr>
                         }
                     </tbody>
@@ -95,15 +100,36 @@
                 </div>
             }
 
+            @* Tổng tiền sau giảm giá *@
+            @{
+                int totalCart = 0;
+                foreach (var item in itemList)
+                {
+                    int discountPrice = item.Price ?? 0;
+                    if (item.Product.Discount.HasValue && item.Product.Discount > 0)
+                    {
+                        discountPrice -= (int)(item.Price * item.Product.Discount / 100);
+                    }
+                    totalCart += discountPrice * (item.Quantity ?? 0);
+                }
+
+            }
+
+            <div class="text-end mt-3">
+                <h5>Tổng tiền sau giảm giá: <span class="text-danger" id="totalCartDisplay">@string.Format(culture, "{0:C0}", totalCart)</span></h5>
+
+            </div>
+
             <div class="d-flex justify-content-between mt-4">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-cash-coin"></i> Thanh toán
                 </button>
-                <a href="@Url.Action("OrderHistory", "Customer")" class="btn btn-outline-secondary">
+                <a href="@Url.Action("OrderHistory", "CustomAccount")" class="btn btn-outline-secondary">
                     <i class="bi bi-clock-history"></i> Xem lịch sử mua hàng
                 </a>
             </div>
         </form>
+
     }
 </div>
 
@@ -120,12 +146,12 @@
             }
             shownCount += revealed;
 
-            // Nếu đã hiển thị hết thì ẩn nút
             if (shownCount >= rows.length) {
                 this.style.display = 'none';
             }
         });
-         // Hàm cập nhật ô thành tiền dựa vào số lượng mới và giá
+
+        // Cập nhật tổng tiền cho một item và tổng toàn bộ giỏ hàng
         function updateTotal(cartItemId, newQuantity) {
             const input = $('.quantity-input[data-id="' + cartItemId + '"]');
             const price = parseFloat(input.data('price'));
@@ -134,15 +160,35 @@
                 style: 'currency',
                 currency: 'VND'
             });
+
             const totalCellId = input.data('total-cell-id');
             $('#' + totalCellId).text(formatter.format(newTotal));
+
+            updateTotalCart(); // gọi cập nhật tổng giỏ hàng
         }
 
-        // Xử lý tăng số lượng bằng AJAX
+        // Cập nhật tổng toàn bộ giỏ hàng sau giảm giá
+        function updateTotalCart() {
+            let totalCart = 0;
+            $('.quantity-input').each(function () {
+                const quantity = parseInt($(this).val());
+                const price = parseFloat($(this).data('price'));
+                totalCart += quantity * price;
+            });
+
+            const formatter = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            });
+
+            $('#totalCartDisplay').text(formatter.format(totalCart));
+        }
+
+        // Tăng số lượng
         $('.increase-btn').on('click', function (e) {
             e.preventDefault();
-            var cartItemId = $(this).data('id');
-            var input = $('.quantity-input[data-id="' + cartItemId + '"]');
+            const cartItemId = $(this).data('id');
+            const input = $('.quantity-input[data-id="' + cartItemId + '"]');
 
             $.post('@Url.Action("IncreaseQuantityAjax", "Cart")', { id: cartItemId }, function (res) {
                 if (res.success) {
@@ -152,11 +198,11 @@
             });
         });
 
-        // Xử lý giảm số lượng bằng AJAX
+        // Giảm số lượng
         $('.decrease-btn').on('click', function (e) {
             e.preventDefault();
-            var cartItemId = $(this).data('id');
-            var input = $('.quantity-input[data-id="' + cartItemId + '"]');
+            const cartItemId = $(this).data('id');
+            const input = $('.quantity-input[data-id="' + cartItemId + '"]');
 
             $.post('@Url.Action("DecreaseQuantityAjax", "Cart")', { id: cartItemId }, function (res) {
                 if (res.success) {
@@ -165,7 +211,8 @@
                 }
             });
         });
-            // Lựa chọn ít nhất một mặt hàng để thanh toán
+
+        // Bắt buộc chọn ít nhất một sản phẩm
         $(document).ready(function () {
             $("form").on("submit", function (e) {
                 const checkedItems = $("input[name='selectedItems']:checked");
@@ -174,8 +221,9 @@
                     e.preventDefault();
                 }
             });
-        });
 
+            updateTotalCart(); // tính tổng lần đầu khi page load
+        });
     </script>
 }
 

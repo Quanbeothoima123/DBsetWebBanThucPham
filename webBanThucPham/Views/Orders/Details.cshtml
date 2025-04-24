@@ -1,0 +1,64 @@
+﻿@model webBanThucPham.Models.Order
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4"><i class="bi bi-info-circle-fill me-2"></i>Chi tiết đơn hàng #@Model.OrderId</h2>
+
+    <div class="mb-4">
+        <h5><i class="bi bi-geo-alt-fill me-2"></i>Địa chỉ nhận hàng</h5>
+        <p>
+            <strong>Số điện thoại:</strong> @Model.DeliveryAddress?.PhoneNumber <br />
+            <strong>Địa chỉ:</strong> @Model.DeliveryAddress?.NameAddress
+        </p>
+    </div>
+
+    <div class="table-responsive shadow-sm">
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Hình ảnh</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Giảm giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
+                    <th>Ngày giao hàng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Orderdetails)
+                {
+                    <tr>
+                        <td>
+                            <img src="@item.Product.Thumb" alt="Ảnh" style="width: 80px; height: 80px; object-fit: cover;" class="rounded shadow-sm" />
+                        </td>
+                        <td>@item.Product.ProductName</td>
+                        <td>@(item.Product.Price?.ToString("n0") ?? "0") ₫</td>
+                        <td>@(item.Discount ?? 0)%</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Total.ToString("n0") ₫</td>
+                        <td>@item.ShipDate?.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+
+                <!-- Tổng tiền -->
+                <tr class="fw-bold table-light">
+                    <td colspan="5" class="text-end">Tổng cộng:</td>
+                    <td colspan="2" class="text-danger">
+                        @Model.Orderdetails.Sum(d => d.Total).ToString("n0") ₫
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 text-end">
+        <a href="@Url.Action("OrderHistory", "Orders")" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Quay lại
+        </a>
+    </div>
+</div>

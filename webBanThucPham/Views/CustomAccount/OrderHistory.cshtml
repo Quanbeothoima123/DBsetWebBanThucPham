@@ -1,0 +1,119 @@
+﻿@model List<webBanThucPham.Models.Order>
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</h2>
+
+    <form asp-action="OrderHistory" method="get" class="row g-3 border p-3 mb-4 rounded bg-light shadow-sm">
+        <div class="col-md-3">
+            <label for="status" class="form-label">Trạng thái đơn hàng</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">-- Tất cả --</option>
+                @foreach (var item in ViewBag.StatusList)
+                {
+                    <option value="@item.Status">@item.Status</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
+            <select name="paymentMethod" id="paymentMethod" class="form-select">
+                <option value="">-- Tất cả --</option>
+                @foreach (var method in ViewBag.PaymentMethods)
+                {
+                    <option value="@method.PaymentMethodId">@method.MethodName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" name="fromDate" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" name="toDate" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Số tiền từ</label>
+            <input type="number" name="minPrice" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Số tiền đến</label>
+            <input type="number" name="maxPrice" class="form-control" />
+        </div>
+        <div class="col-md-12 text-end mt-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Tìm kiếm
+            </button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Trạng thái</th>
+                    <th>Thanh toán</th>
+                    <th>Số tiền</th>
+                    <!-- Thêm vào thead -->
+                    <th>Ngày đặt hàng</th>
+                    <th>Ngày thanh toán</th>
+                    <th>Phương thức</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    var total = order.Orderdetails.Sum(d => d.Total);
+                    <tr>
+                        <td><i class="bi bi-receipt-cutoff me-1 text-primary"></i>@order.OrderId</td>
+                        <td>
+                            @if (order.Deleted)
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Đã hủy</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">@order.TransactStatus?.Status</span>
+                            }
+                        </td>
+                        <td>
+                            @if (order.Paid)
+                            {
+                                <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
+                            }
+                            else
+                            {
+                                <span class="text-warning fw-bold"><i class="bi bi-exclamation-circle-fill"></i> Chưa thanh toán</span>
+                            }
+                        </td>
+                        <td>@total.ToString("n0") ₫</td>
+                        <td>@order.OrderDate?.ToString("dd/MM/yyyy")</td>
+                        <td>@order.PaymentDate?.ToString("dd/MM/yyyy")</td>
+                        <td>@order.PaymentMethod?.MethodName</td>
+                        <td class="text-center">
+                            <a class="btn btn-outline-primary btn-sm me-1" title="Xem chi tiết"
+                               href="@Url.Action("Details", "Orders", new { id = order.OrderId })">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                            @if (order.TransactStatusId == 1 && !order.Deleted)
+                            {
+                                <form asp-action="CancelOrder" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này không?')" style="display:inline;">
+                                    <input type="hidden" name="id" value="@order.OrderId" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Hủy đơn">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

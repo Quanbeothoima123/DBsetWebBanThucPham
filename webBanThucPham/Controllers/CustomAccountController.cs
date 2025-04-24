@@ -351,19 +351,70 @@ namespace webBanThucPham.Controllers
             return RedirectToAction("EditInfo");
         }
 
-        [HttpPost]
-        public IActionResult DeleteDeliveryAddress(int id)
+
+        [HttpGet]
+        public IActionResult OrderHistory(string? status, int? paymentMethod, DateTime? fromDate, DateTime? toDate, int? minPrice, int? maxPrice)
         {
-            var address = _context.Deliveryaddresses.FirstOrDefault(a => a.DeliveryAddressId == id);
-            if (address == null) return NotFound();
+            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (customerId == null)
+            {
+                TempData["ErrorMessage"] = "Bạn cần đăng nhập để xem lịch sử đơn hàng.";
+                return RedirectToAction("Login", "CustomAccount");
+            }
+            var orders = _context.Orders
+            .Include(o => o.TransactStatus)
+            .Include(o => o.PaymentMethod)
+            .Include(o => o.Orderdetails)
+                .ThenInclude(od => od.Product)
+            .Include(o => o.DeliveryAddress)
+            .Where(o => o.CustomerId == customerId && !o.Deleted)
+            .AsQueryable();
 
-            _context.Deliveryaddresses.Remove(address);
-            _context.SaveChanges();
+            if (!string.IsNullOrEmpty(status))
+                orders = orders.Where(o => o.TransactStatus!.Status == status);
 
-            TempData["Success"] = "Xóa địa chỉ thành công!";
-            return RedirectToAction("EditInfo");
+            if (paymentMethod.HasValue)
+                orders = orders.Where(o => o.PaymentMethodId == paymentMethod);
+
+            if (fromDate.HasValue)
+                orders = orders.Where(o => o.PaymentDate >= fromDate);
+
+            if (toDate.HasValue)
+                orders = orders.Where(o => o.PaymentDate <= toDate);
+
+            if (minPrice.HasValue)
+                orders = orders.Where(o => o.Orderdetails.Sum(d => d.Total) >= minPrice);
+
+            if (maxPrice.HasValue)
+                orders = orders.Where(o => o.Orderdetails.Sum(d => d.Total) <= maxPrice);
+
+            ViewBag.StatusList = _context.Transactstatusses.ToList();
+            ViewBag.PaymentMethods = _context.PaymentMethods.ToList();
+
+            return View(orders.ToList());
         }
 
+        [HttpPost]
+        public IActionResult CancelOrder(int id)
+        {
+            var order = _context.Orders.Include(o => o.Orderdetails).FirstOrDefault(o => o.OrderId == id);
+            if (order != null && order.TransactStatusId == 1 && !order.Deleted)
+            {
+                order.Deleted = true;
 
+                foreach (var item in order.Orderdetails)
+                {
+                    var product = _context.Products.FirstOrDefault(p => p.ProductId == item.ProductId);
+                    if (product != null)
+                    {
+                        product.UnitsInStock = (product.UnitsInStock ?? 0) + item.Quantity;
+                    }
+                }
+
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction("OrderHistory");
+        }
     }
 }

@@ -207,12 +207,19 @@ namespace webBanThucPham.Controllers
                 .Where(c => selectedItems.Contains(c.CartItemId) && c.Cart.CustomerId == customerId)
                 .ToList();
 
+            var customer = _context.Customers
+                .Include(c => c.Deliveryaddresses)
+                .FirstOrDefault(c => c.CustomerId == customerId);
+
+            ViewBag.Customer = customer;
+
             return View(cartItems);
         }
 
 
+
         [HttpPost]
-        public IActionResult Checkout(int[] selectedItems, int[] quantities, string paymentMethod)
+        public IActionResult Checkout(int[] selectedItems, int[] quantities, string paymentMethod, string? note, int selectedAddressId)
         {
             var customerId = HttpContext.Session.GetInt32("CustomerId");
             if (customerId == null)
@@ -221,38 +228,110 @@ namespace webBanThucPham.Controllers
                 return RedirectToAction("Login", "CustomAccount");
             }
 
-            for (int i = 0; i < selectedItems.Length; i++)
+            var cart = _context.Carts.Include(c => c.Cartitems).ThenInclude(ci => ci.Product)
+                                      .FirstOrDefault(c => c.CustomerId == customerId);
+
+            if (cart == null)
             {
-                int cartItemId = selectedItems[i];
-                int newQuantity = quantities[i];
-
-                var cartItem = _context.Cartitems
-                    .Include(ci => ci.Product)
-                    .FirstOrDefault(ci => ci.CartItemId == cartItemId && ci.Cart.CustomerId == customerId);
-
-                if (cartItem != null)
-                {
-                    int availableStock = cartItem.Product.UnitsInStock ?? 0;
-
-                    if (newQuantity <= availableStock)
-                    {
-                        cartItem.Product.UnitsInStock = availableStock - newQuantity;
-                        cartItem.Quantity = newQuantity;
-                        // => sau này: tạo OrderItem
-                    }
-                    else
-                    {
-                        _context.Cartitems.Remove(cartItem);
-                    }
-                }
+                TempData["ErrorMessage"] = "Giỏ hàng không tồn tại.";
+                return RedirectToAction("CartView", "Cart");
             }
 
+            var removedItems = new List<string>();
+            var outOfStockItems = new List<string>();
+            var orderDetails = new List<Orderdetail>();
+            int totalAmount = 0;
+
+            for (int i = 0; i < selectedItems.Length; i++)
+            {
+                var cartItemId = selectedItems[i];
+                var quantity = quantities[i];
+
+                var cartItem = cart.Cartitems.FirstOrDefault(ci => ci.CartItemId == cartItemId);
+                if (cartItem == null || cartItem.Quantity == null)
+                    continue;
+
+                if (quantity > cartItem.Quantity)
+                {
+                    removedItems.Add(cartItem.Product.ProductName);
+                    _context.Cartitems.Remove(cartItem);
+                    continue;
+                }
+
+                var product = cartItem.Product;
+                int stock = product.UnitsInStock ?? 0;
+
+                if (quantity > stock)
+                {
+                    outOfStockItems.Add(product.ProductName);
+                    continue;
+                }
+
+                product.UnitsInStock = stock - quantity;
+
+                int price = product.Price ?? 0;
+                int discount = product.Discount ?? 0;
+                int discountedPrice = price * (100 - discount) / 100;
+
+                int itemTotal = discountedPrice * quantity;
+                totalAmount += itemTotal;
+
+                orderDetails.Add(new Orderdetail
+                {
+                    ProductId = product.ProductId,
+                    Quantity = quantity,
+                    OrderNumber = i + 1,
+                    Total = itemTotal,
+                    Discount = discount,
+                    ShipDate = null
+                });
+
+                _context.Cartitems.Remove(cartItem);
+            }
+
+            if (outOfStockItems.Any())
+            {
+                TempData["ErrorMessage"] = $"Sản phẩm sau đã vượt quá số lượng tồn kho: {string.Join(", ", outOfStockItems)}.";
+                return RedirectToAction("CartView", "Cart");
+            }
+
+            if (!orderDetails.Any())
+            {
+                TempData["ErrorMessage"] = "Không có sản phẩm nào hợp lệ để thanh toán.";
+                return RedirectToAction("CartView", "Cart");
+            }
+
+            int paymentMethodId = 0;
+            if (paymentMethod == "COD") paymentMethodId = 1;
+
+            int deliveryAddressId = selectedAddressId == 0 ? -1 : selectedAddressId;
+
+            var newOrder = new Order
+            {
+                CustomerId = customerId.Value,
+                OrderDate = DateTime.Now,
+                ShipDate = null,
+                TransactStatusId = 1,
+                Deleted = false,
+                Paid = false,
+                PaymentId = null,
+                PaymentDate = null,
+                PaymentMethodId = paymentMethodId,
+                DeliveryAddressId = deliveryAddressId,
+                Note = note,
+                Orderdetails = orderDetails
+            };
+
+            _context.Orders.Add(newOrder);
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "Thanh toán thành công bằng: " + paymentMethod;
-            return RedirectToAction("CheckoutSuccess"); // sẽ tạo sau
+            TempData["SuccessMessage"] = "Thanh toán thành công.";
+            return RedirectToAction("CheckoutSuccess");
         }
-
+        public IActionResult CheckoutSuccess()
+        {
+            return View();
+        }
 
     }
 }

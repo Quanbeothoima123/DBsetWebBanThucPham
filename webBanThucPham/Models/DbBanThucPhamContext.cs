@@ -42,6 +42,8 @@ public partial class DbBanThucPhamContext : DbContext
 
     public virtual DbSet<Page> Pages { get; set; }
 
+    public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -291,20 +293,34 @@ public partial class DbBanThucPhamContext : DbContext
 
             entity.HasIndex(e => e.CustomerId, "CustomerID");
 
+            entity.HasIndex(e => e.DeliveryAddressId, "fk_orders_deliveryaddress");
+
+            entity.HasIndex(e => e.PaymentMethodId, "fk_orders_paymentmethod");
+
             entity.Property(e => e.OrderId).HasColumnName("OrderID");
             entity.Property(e => e.CustomerId).HasColumnName("CustomerID");
+            entity.Property(e => e.DeliveryAddressId).HasColumnName("DeliveryAddressID");
             entity.Property(e => e.Note).HasColumnType("text");
             entity.Property(e => e.OrderDate)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
             entity.Property(e => e.PaymentDate).HasColumnType("datetime");
             entity.Property(e => e.PaymentId).HasColumnName("PaymentID");
+            entity.Property(e => e.PaymentMethodId).HasColumnName("PaymentMethodID");
             entity.Property(e => e.ShipDate).HasColumnType("datetime");
             entity.Property(e => e.TransactStatusId).HasColumnName("TransactStatusID");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
                 .HasConstraintName("orders_ibfk_1");
+
+            entity.HasOne(d => d.DeliveryAddress).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.DeliveryAddressId)
+                .HasConstraintName("fk_orders_deliveryaddress");
+
+            entity.HasOne(d => d.PaymentMethod).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.PaymentMethodId)
+                .HasConstraintName("fk_orders_paymentmethod");
         });
 
         modelBuilder.Entity<Orderdetail>(entity =>
@@ -353,6 +369,21 @@ public partial class DbBanThucPhamContext : DbContext
                 .HasDefaultValueSql("'1'");
             entity.Property(e => e.Thumb).HasMaxLength(250);
             entity.Property(e => e.Title).HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<PaymentMethod>(entity =>
+        {
+            entity.HasKey(e => e.PaymentMethodId).HasName("PRIMARY");
+
+            entity.ToTable("payment_methods");
+
+            entity.Property(e => e.PaymentMethodId).HasColumnName("PaymentMethodID");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
+            entity.Property(e => e.MethodName)
+                .HasColumnType("text")
+                .HasColumnName("method_name");
         });
 
         modelBuilder.Entity<Product>(entity =>

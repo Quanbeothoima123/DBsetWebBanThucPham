@@ -1,11 +1,11 @@
-﻿@model List<Cartitem>
-@* Đây là danh sách Cartitem được truyền từ controller để hiển thị *@
+﻿@model List<webBanThucPham.Models.Cartitem>
 
 @{
     ViewData["Title"] = "Xác nhận thanh toán";
     decimal totalPrice = 0;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <div class="container my-5">
     <h2 class="mb-4 text-center">Xác nhận đơn hàng</h2>
 
@@ -26,18 +26,35 @@
                     @for (int i = 0; i < Model.Count; i++)
                     {
                         var item = Model[i];
-                        decimal itemTotal = (item.Product.Price ?? 0) * (item.Quantity ?? 0);
+                        int quantity = item.Quantity ?? 0;
+                        decimal originalPrice = item.Product.Price ?? 0;
+                        decimal discountPercent = item.Product.Discount ?? 0;
+                        decimal discountAmount = originalPrice * discountPercent / 100;
+                        decimal finalPrice = originalPrice - discountAmount;
+                        decimal itemTotal = finalPrice * quantity;
                         totalPrice += itemTotal;
+
                         <tr>
                             <td>
-                                <img src="@item.Product.Thumb" alt="Ảnh" style="width: 80px; height: 80px; object-fit: cover;" />
+                                <a href="@Url.Action("Details", "Product", new { id = item.ProductId })">
+                                    <img src="@item.Product.Thumb" alt="Ảnh" style="width: 80px; height: 80px; object-fit: cover;" />
+                                </a>
                             </td>
                             <td>@item.Product.ProductId</td>
                             <td>@item.Product.ProductName</td>
-                            <td>@String.Format("{0:N0}₫", item.Product.Price)</td>
+                            <td>
+                                <div>
+                                    <del class="text-muted">@String.Format("{0:N0}₫", originalPrice)</del>
+                                    <span class="text-danger ms-2 fw-bold">@String.Format("{0:N0}₫", finalPrice)</span>
+                                    @if (discountPercent > 0)
+                                    {
+                                        <div class="text-success small">Giảm @discountPercent%</div>
+                                    }
+                                </div>
+                            </td>
                             <td>
                                 <input type="hidden" name="selectedItems" value="@item.CartItemId" />
-                                <input type="number" name="quantities" class="form-control text-center" value="@item.Quantity" min="1" />
+                                <input type="number" name="quantities" class="form-control text-center" value="@item.Quantity" min="1" readonly />
                             </td>
                             <td>@String.Format("{0:N0}₫", itemTotal)</td>
                         </tr>
@@ -59,16 +76,65 @@
                     <button class="nav-link" id="momo-tab" data-bs-toggle="tab" data-bs-target="#momo" type="button" role="tab">Mã QR Momo</button>
                 </li>
             </ul>
-            <div class="tab-content border border-top-0 p-3" id="paymentTabContent">
-                <div class="tab-pane fade show active" id="cod" role="tabpanel">
-                    <p>Bạn sẽ thanh toán khi nhận hàng (COD).</p>
-                    <input type="hidden" name="paymentMethod" value="COD" />
-                </div>
-                <div class="tab-pane fade" id="momo" role="tabpanel">
-                    <p>Phương thức thanh toán bằng mã QR Momo hiện chưa khả dụng.</p>
-                    <input type="hidden" name="paymentMethod" value="MOMO" />
-                </div>
+            <div class="tab-pane fade show active" id="cod" role="tabpanel">
+                <p>Bạn sẽ thanh toán khi nhận hàng (COD).</p>
+                <input type="hidden" name="paymentMethod" value="COD" />
+
+                @{
+                    var customer = ViewBag.Customer as webBanThucPham.Models.Customer;
+                    var hasAddress = false;
+                }
+
+                @if (customer != null)
+                {
+                    var selectedId = customer.Deliveryaddresses.FirstOrDefault()?.DeliveryAddressId ?? 0;
+
+                    if (!string.IsNullOrEmpty(customer.Address) && !string.IsNullOrEmpty(customer.Phone))
+                    {
+                        hasAddress = true;
+                        <div class="form-check my-3">
+                            <input class="form-check-input" type="radio" name="selectedAddressId" id="defaultAddress" value="0" checked />
+                            <label class="form-check-label" for="defaultAddress">
+                                <strong>Địa chỉ mặc định:</strong><br />
+                                @customer.Address<br />
+                                <strong>SĐT:</strong> @customer.Phone
+                            </label>
+                        </div>
+                    }
+
+                    if (customer.Deliveryaddresses != null && customer.Deliveryaddresses.Any())
+                    {
+                        hasAddress = true;
+                        <div class="mt-3">
+                            <strong>Chọn một trong các địa chỉ đã lưu:</strong>
+                            <div class="list-group">
+                                @foreach (var addr in customer.Deliveryaddresses)
+                                {
+                                    <div class="form-check my-2">
+                                        <input class="form-check-input" type="radio" name="selectedAddressId" id="addr_@addr.DeliveryAddressId" value="@addr.DeliveryAddressId" @(addr.DeliveryAddressId == selectedId && customer.Address == null ? "checked" : "") />
+                                        <label class="form-check-label" for="addr_@addr.DeliveryAddressId">
+                                            <strong>@addr.NameAddress</strong> – @addr.PhoneNumber
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (!hasAddress)
+                {
+                    <div class="alert alert-warning mt-3">
+                        Bạn chưa có địa chỉ giao hàng.
+                        <a class="btn btn-sm btn-outline-primary ms-2" asp-action="EditInfo" asp-controller="CustomAccount">Cập nhật ngay</a>
+                    </div>
+                }
             </div>
+        </div>
+
+        <div class="mt-4">
+            <label for="note" class="form-label">Ghi chú đơn hàng (nếu có):</label>
+            <textarea name="note" id="note" class="form-control" rows="4" placeholder="Nhập ghi chú..."></textarea>
         </div>
 
         <div class="text-center mt-4">
@@ -78,5 +144,3 @@
         </div>
     </form>
 </div>
-
-
