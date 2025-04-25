@@ -21,13 +21,14 @@ namespace webBanThucPham.Controllers
             _context = context;
             _notyf = notyf;
         }
-    
+
         public IActionResult Details(int id)
         {
             var order = _context.Orders
                 .Include(o => o.Orderdetails)
                     .ThenInclude(od => od.Product)
                 .Include(o => o.DeliveryAddress)
+                .Include(o => o.Customer) // 👈 Thêm dòng này
                 .FirstOrDefault(o => o.OrderId == id);
 
             if (order == null)
@@ -37,6 +38,7 @@ namespace webBanThucPham.Controllers
 
             return View(order);
         }
+
 
     }
 }

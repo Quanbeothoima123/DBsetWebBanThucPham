@@ -11,9 +11,18 @@
     <div class="mb-4">
         <h5><i class="bi bi-geo-alt-fill me-2"></i>Địa chỉ nhận hàng</h5>
         <p>
-            <strong>Số điện thoại:</strong> @Model.DeliveryAddress?.PhoneNumber <br />
-            <strong>Địa chỉ:</strong> @Model.DeliveryAddress?.NameAddress
+            @if (Model.DeliveryAddress != null)
+            {
+                <strong>Số điện thoại:</strong> @Model.DeliveryAddress.PhoneNumber <br />
+                <strong>Địa chỉ:</strong> @Model.DeliveryAddress.NameAddress
+            }
+            else
+            {
+                <strong>Số điện thoại:</strong> @Model.Customer.Phone <br />
+                <strong>Địa chỉ:</strong> @Model.Customer.Address
+            }
         </p>
+
     </div>
 
     <div class="table-responsive shadow-sm">
@@ -57,7 +66,7 @@
     </div>
 
     <div class="mt-4 text-end">
-        <a href="@Url.Action("OrderHistory", "Orders")" class="btn btn-secondary">
+        <a href="@Url.Action("OrderHistory", "CustomAccount")" class="btn btn-secondary">
             <i class="bi bi-arrow-left-circle"></i> Quay lại
         </a>
     </div>

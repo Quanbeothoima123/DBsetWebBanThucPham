@@ -96,10 +96,17 @@
                                 </a>
 
                                 <!-- Các nút thao tác -->
-                                <div class="product-add-action d-flex justify-content-around mt-2">
-                                    <a href="#" class="btn btn-outline-primary btn-sm"><i class="pe-7s-cart"></i></a>
-                                    <a href="#" class="btn btn-outline-secondary btn-sm"><i class="pe-7s-shuffle"></i></a>
+                                <div class="product-add-action d-flex justify-content-start mt-2 bg-white p-2 rounded shadow-sm gap-2">
+                                    <a asp-controller="Cart"
+                                       asp-action="AddToCart"
+                                       asp-route-productId="@product.ProductId" class="btn btn-outline-primary btn-sm position-relative" data-bs-toggle="tooltip" data-bs-placement="top" title="Thêm vào giỏ hàng">
+                                        <i class="pe-7s-cart fs-5"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-secondary btn-sm position-relative" data-bs-toggle="tooltip" data-bs-placement="top" title="Chia sẻ">
+                                        <i class="pe-7s-shuffle fs-5"></i>
+                                    </a>
                                 </div>
+
                             </div>
 
                             <!-- Nội dung sản phẩm -->
@@ -131,3 +138,11 @@
         </div>
     </div>
 </div>
+
+
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>

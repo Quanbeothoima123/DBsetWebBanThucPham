@@ -304,7 +304,8 @@ namespace webBanThucPham.Controllers
             int paymentMethodId = 0;
             if (paymentMethod == "COD") paymentMethodId = 1;
 
-            int deliveryAddressId = selectedAddressId == 0 ? -1 : selectedAddressId;
+            int? deliveryAddressId = selectedAddressId == 0 ? null : selectedAddressId;
+
 
             var newOrder = new Order
             {
@@ -317,7 +318,7 @@ namespace webBanThucPham.Controllers
                 PaymentId = null,
                 PaymentDate = null,
                 PaymentMethodId = paymentMethodId,
-                DeliveryAddressId = deliveryAddressId,
+                DeliveryAddressId = deliveryAddressId, // <- bây giờ có thể là null
                 Note = note,
                 Orderdetails = orderDetails
             };
