@@ -7,6 +7,7 @@ using AspNetCoreHero.ToastNotification.Extensions;
 using AspNetCoreHero.ToastNotification.Notyf;
 using Microsoft.AspNetCore.Http.Features;
 using SendGrid;
+using webBanThucPham.Middlewares;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Services.Configure<FormOptions>(options =>
 
 
 builder.Services.AddControllersWithViews();
+
+
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -92,6 +95,21 @@ app.UseRouting();
 
 // Them UseSession vao Middleware
 app.UseSession();
+
+
+// Dieu huong thu cong neu truy cap dung "/admin"
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.Equals("/admin", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Redirect("/Admin/AdminAccounts/Login");
+        return;
+    }
+    await next();
+});
+
+
+app.UseMiddleware<AdminAuthorizationMiddleware>();
 
 app.UseAuthorization();
 

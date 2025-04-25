@@ -1,0 +1,196 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Đăng nhập trang quản trị";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container mt-5" style="max-width: 500px;">
+        <div class="card shadow-lg rounded-4">
+            <div class="card-header bg-primary text-white text-center rounded-top-4">
+                <h3><i class="bi bi-shield-lock-fill"></i> Đăng nhập Admin</h3>
+            </div>
+            <div class="card-body">
+
+                @if (ViewData["Message"] != null)
+                {
+                    <div class="alert alert-@ViewData["Type"]">@ViewData["Message"]</div>
+                }
+                <!-- Khung thông báo -->
+                <div id="message" class="alert d-none" role="alert"></div>
+
+                <!-- Đăng nhập bằng mật khẩu -->
+                <form id="passwordLoginForm" method="post" asp-action="Login" asp-controller="AdminAccounts" asp-area="Admin">
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-envelope-fill me-1"></i>Email</label>
+                        <input type="email" name="email" required class="form-control" />
+                    </div>
+                    <div class="mb-3 position-relative">
+                        <label class="form-label"><i class="bi bi-key-fill me-1"></i>Mật khẩu</label>
+                        <input type="password" name="password" id="passwordInput" required class="form-control" />
+                        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2" onclick="togglePassword()">
+                            <i id="eyeIcon" class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập bằng mật khẩu
+                    </button>
+                </form>
+
+                <hr class="my-4" />
+                <h5 class="text-center"><i class="bi bi-shield-check"></i> Hoặc đăng nhập bằng mã OTP</h5>
+
+                <div class="mb-2">
+                    <input type="email" id="otpEmail" class="form-control" placeholder="Nhập email admin" />
+                </div>
+                <div class="d-grid mb-3">
+                    <button id="sendOtpBtn" class="btn btn-warning">
+                        <i class="bi bi-send-fill me-1"></i> Gửi mã OTP
+                    </button>
+                </div>
+
+                <div id="verifyOtpForm" class="mb-2 d-none">
+                    <input type="text" id="otpCode" class="form-control" placeholder="Nhập mã OTP" />
+                </div>
+                <div class="d-grid">
+                    <button id="verifyOtpBtn" class="btn btn-success">
+                        <i class="bi bi-check-circle-fill me-1"></i> Xác nhận OTP
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    @* <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> *@
+
+    <!-- Script xử lý OTP và hiển thị thông báo -->
+    <script>
+        const sendBtn = document.getElementById("sendOtpBtn");
+        const verifyBtn = document.getElementById("verifyOtpBtn");
+        const verifyForm = document.getElementById("verifyOtpForm");
+        const messageBox = document.getElementById("message");
+        const otpInput = document.getElementById("otpCode");
+        const emailInput = document.getElementById("otpEmail");
+
+        let countdownInterval;
+        let resendCooldownInterval;
+
+        // Gửi mã OTP
+        sendBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            if (!email) return showMessage("warning", "Vui lòng nhập email!");
+
+            fetch("/Admin/AdminAccounts/SendOtp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage("success", data.message);
+                    verifyForm.classList.remove("d-none");
+                    otpInput.disabled = false;
+                    startCountdown(data.expiresIn || 300);
+                    startResendCooldown(60);
+                } else {
+                    showMessage("danger", data.message);
+                }
+            });
+        });
+
+        // Xác nhận OTP
+        verifyBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const otp = otpInput.value.trim();
+
+            if (!otp) return showMessage("warning", "Vui lòng nhập mã OTP!");
+
+            fetch("/Admin/AdminAccounts/VerifyOtp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email, otp: otp })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage("success", data.message);
+                    clearInterval(countdownInterval);
+                    setTimeout(() => window.location.href = "/Admin/Home/Index", 1500);
+                } else {
+                    showMessage("danger", data.message);
+                }
+            });
+        });
+
+        // Hiển thị thông báo Bootstrap
+        function showMessage(type, text) {
+            messageBox.className = `alert alert-${type}`;
+            messageBox.textContent = text;
+            messageBox.classList.remove("d-none");
+            setTimeout(() => messageBox.classList.add("d-none"), 4000); // Ẩn sau 4s
+        }
+
+        function startCountdown(seconds) {
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                seconds--;
+                const min = Math.floor(seconds / 60);
+                const sec = seconds % 60;
+                otpInput.placeholder = `Mã hết hạn sau ${min}:${sec.toString().padStart(2, '0')}`;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    otpInput.disabled = true;
+                    showMessage("danger", "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
+                }
+            }, 1000);
+        }
+
+        function startResendCooldown(seconds) {
+            sendBtn.disabled = true;
+            const originalText = sendBtn.innerHTML;
+
+            resendCooldownInterval = setInterval(() => {
+                sendBtn.innerHTML = `Gửi lại (${seconds}s)`;
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(resendCooldownInterval);
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = originalText;
+                }
+            }, 1000);
+        }
+
+        // Ẩn/hiện mật khẩu
+        function togglePassword() {
+            const passwordInput = document.getElementById("passwordInput");
+            const eyeIcon = document.getElementById("eyeIcon");
+            const type = passwordInput.getAttribute("type");
+
+            if (type === "password") {
+                passwordInput.setAttribute("type", "text");
+                eyeIcon.classList.remove("bi-eye-slash");
+                eyeIcon.classList.add("bi-eye");
+            } else {
+                passwordInput.setAttribute("type", "password");
+                eyeIcon.classList.remove("bi-eye");
+                eyeIcon.classList.add("bi-eye-slash");
+            }
+        }
+    </script>
+</body>
+</html>
