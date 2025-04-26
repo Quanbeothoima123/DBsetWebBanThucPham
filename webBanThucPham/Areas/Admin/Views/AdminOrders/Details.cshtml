@@ -1,8 +1,128 @@
-﻿
+﻿@model webBanThucPham.Models.Order
+
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết đơn hàng";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+    <h2 class="mb-4"><i class="bi bi-receipt me-2"></i>Chi tiết đơn hàng #@Model.OrderId</h2>
 
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5><i class="bi bi-person-fill me-2"></i>Khách hàng</h5>
+            <p>
+                <strong>Họ tên:</strong> @Model.Customer.FullName <br />
+                <strong>Email:</strong> @Model.Customer.Email <br />
+                <strong>Số điện thoại:</strong> @Model.Customer.Phone
+            </p>
+        </div>
+        <div class="col-md-6">
+            <h5><i class="bi bi-geo-alt-fill me-2"></i>Địa chỉ nhận hàng</h5>
+            <p>
+                @if (Model.DeliveryAddress != null)
+                {
+                    <strong>Số điện thoại:</strong> @Model.DeliveryAddress.PhoneNumber <br />
+                    <strong>Địa chỉ:</strong> @Model.DeliveryAddress.NameAddress
+                }
+                else
+                {
+                    <strong>Số điện thoại:</strong> @Model.Customer.Phone <br />
+                    <strong>Địa chỉ:</strong> @Model.Customer.Address
+                }
+            </p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <h5><i class="bi bi-calendar-check me-2"></i>Ngày đặt hàng</h5>
+            <p>@Model.OrderDate?.ToString("dd/MM/yyyy")</p>
+        </div>
+        <div class="col-md-4">
+            <h5><i class="bi bi-credit-card me-2"></i>Phương thức thanh toán</h5>
+            <p>@Model.PaymentMethod?.MethodName</p>
+        </div>
+        <div class="col-md-4">
+            <h5><i class="bi bi-sticky me-2"></i>Ghi chú</h5>
+            <p>@Model.Note</p>
+        </div>
+    </div>
+
+    <div class="table-responsive shadow-sm mb-4">
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Hình ảnh</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Giảm giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
+                    <th>Ngày giao hàng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Orderdetails)
+                {
+                    <tr>
+                        <td>
+                            <img src="@item.Product.Thumb" alt="Ảnh" style="width: 80px; height: 80px; object-fit: cover;" class="rounded shadow-sm" />
+                        </td>
+                        <td>@item.Product.ProductName</td>
+                        <td>@(item.Product.Price?.ToString("n0") ?? "0") ₫</td>
+                        <td>@(item.Discount ?? 0)%</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Total.ToString("n0") ₫</td>
+                        <td>@item.ShipDate?.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+
+                <!-- Tổng tiền -->
+                <tr class="fw-bold table-light">
+                    <td colspan="5" class="text-end">Tổng cộng:</td>
+                    <td colspan="2" class="text-danger">
+                        @Model.Orderdetails.Sum(d => d.Total).ToString("n0") ₫
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Timeline trạng thái đơn hàng -->
+    <div class="mb-4">
+        <h5><i class="bi bi-clock-history me-2"></i>Trạng thái đơn hàng</h5>
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-hourglass-split me-2"></i>Đã đặt hàng</span>
+                <span>@Model.OrderDate?.ToString("dd/MM/yyyy")</span>
+            </li>
+            @if (Model.ShipDate.HasValue)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-truck me-2"></i>Đã giao hàng</span>
+                    <span>@Model.ShipDate?.ToString("dd/MM/yyyy")</span>
+                </li>
+            }
+            @if (Model.PaymentDate.HasValue)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-cash-stack me-2"></i>Đã thanh toán</span>
+                    <span>@Model.PaymentDate?.ToString("dd/MM/yyyy")</span>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-end gap-2">
+        <a href="@Url.Action("ExportToPdf", "AdminOrders", new { id = Model.OrderId })" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> Xuất PDF
+        </a>
+        <a href="@Url.Action("ExportToExcel", "AdminOrders", new { id = Model.OrderId })" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+        </a>
+        <a href="@Url.Action("Index", "AdminOrders")" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Quay lại
+        </a>
+    </div>
+</div>

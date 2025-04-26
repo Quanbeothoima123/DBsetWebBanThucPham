@@ -8,10 +8,14 @@ using AspNetCoreHero.ToastNotification.Notyf;
 using Microsoft.AspNetCore.Http.Features;
 using SendGrid;
 using webBanThucPham.Middlewares;
-
-
+using DinkToPdf;
+using DinkToPdf.Contracts;
+using webBanThucPham.Helper;
+using OfficeOpenXml;
 var builder = WebApplication.CreateBuilder(args);
 
+// Dat LicenseContext ngay sau khi khoi tao builder
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -66,6 +70,10 @@ builder.Services.AddSingleton<ISendGridClient>(provider =>
     return new SendGridClient(apiKey);
 });
 
+
+var context = new CustomAssemblyLoadContext();
+context.LoadUnmanagedLibrary(Path.Combine(builder.Environment.ContentRootPath, "DinkToPdf/Native/libwkhtmltox.dll"));
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

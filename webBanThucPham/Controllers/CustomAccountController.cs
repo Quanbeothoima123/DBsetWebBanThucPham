@@ -401,7 +401,7 @@ namespace webBanThucPham.Controllers
             if (order != null && order.TransactStatusId == 1 && !order.Deleted)
             {
                 order.Deleted = true;
-
+                order.TransactStatusId = 6;
                 foreach (var item in order.Orderdetails)
                 {
                     var product = _context.Products.FirstOrDefault(p => p.ProductId == item.ProductId);
