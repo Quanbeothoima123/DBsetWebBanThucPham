@@ -43,8 +43,9 @@
                                     <span class="badge bg-danger">Chưa xuất bản</span>
                                 }
                             </p>
-                            <p><strong>Tin nổi bật:</strong> @(Model.IsHot.HasValue ? (Model.IsHot.Value ? "Có" : "Không") : "Không xác định")</p>
-                            <p><strong>Hiển thị trang chủ:</strong> @(Model.IsNewfeed.HasValue ? (Model.IsNewfeed.Value ? "Có" : "Không") : "Không xác định")</p>
+                            <p><strong>Tin nổi bật:</strong> @(Model.IsHot ? "Có" : "Không")</p>
+                            <p><strong>Hiển thị trang chủ:</strong> @(Model.IsNewfeed ? "Có" : "Không")</p>
+
 
                         </div>
                     </div>

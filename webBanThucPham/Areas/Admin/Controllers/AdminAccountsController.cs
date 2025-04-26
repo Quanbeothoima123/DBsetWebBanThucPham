@@ -269,7 +269,7 @@ namespace webBanThucPham.Areas.Admin.Controllers
             user.LastLogin = DateTime.Now;
             _context.Update(user);
             _context.SaveChanges();
-            return RedirectToAction("Index", "Home", new { area = "Admin" });
+            return Redirect("/Admin/Home/Index");
             // fix con bug return RedirectToAction("Index", "Home", new { area = "Admin" }); mất 3 tiếng của bố
 
         }
