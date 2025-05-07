@@ -202,6 +202,8 @@ namespace webBanThucPham.Controllers
             if (customerId == null)
                 return RedirectToAction("Login", "CustomAccount");
 
+            var lastOrder = _context.Orders.OrderByDescending(o => o.OrderId).FirstOrDefault();
+            ViewBag.LastOrderId = lastOrder?.OrderId ?? 0;
             var cartItems = _context.Cartitems
                 .Include(c => c.Product)
                 .Where(c => selectedItems.Contains(c.CartItemId) && c.Cart.CustomerId == customerId)

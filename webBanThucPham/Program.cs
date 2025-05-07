@@ -12,7 +12,14 @@ using DinkToPdf;
 using DinkToPdf.Contracts;
 using webBanThucPham.Helper;
 using OfficeOpenXml;
+using webBanThucPham.Models.Momo;
+using webBanThucPham.Services.Momo;
 var builder = WebApplication.CreateBuilder(args);
+
+
+// Connect MomoAPi
+builder.Services.Configure<MomoOptionModel>(builder.Configuration.GetSection("MomoAPI"));
+builder.Services.AddScoped<IMomoService, MomoService>();
 
 // Dat LicenseContext ngay sau khi khoi tao builder
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -82,6 +89,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+
 
 
 var app = builder.Build();

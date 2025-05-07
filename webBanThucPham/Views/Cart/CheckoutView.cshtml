@@ -2,93 +2,94 @@
 
 @{
     ViewData["Title"] = "Xác nhận thanh toán";
-    decimal totalPrice = 0;
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    decimal totalPrice = 0;
+    var customer = ViewBag.Customer as webBanThucPham.Models.Customer;
+    var hasAddress = false;
+    var selectedId = customer?.Deliveryaddresses?.FirstOrDefault()?.DeliveryAddressId ?? 0;
 }
 
 <div class="container my-5">
     <h2 class="mb-4 text-center">Xác nhận đơn hàng</h2>
 
-    <form asp-action="Checkout" method="post">
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle text-center">
-                <thead class="table-dark">
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Hình ảnh</th>
+                    <th>Mã SP</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    var item = Model[i];
+                    int quantity = item.Quantity ?? 0;
+                    decimal originalPrice = item.Product.Price ?? 0;
+                    decimal discountPercent = item.Product.Discount ?? 0;
+                    decimal discountAmount = originalPrice * discountPercent / 100;
+                    decimal finalPrice = originalPrice - discountAmount;
+                    decimal itemTotal = finalPrice * quantity;
+                    totalPrice += itemTotal;
+
                     <tr>
-                        <th>Hình ảnh</th>
-                        <th>Mã SP</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Giá</th>
-                        <th>Số lượng</th>
-                        <th>Thành tiền</th>
+                        <td>
+                            <a href="@Url.Action("Details", "Product", new { id = item.ProductId })">
+                                <img src="@item.Product.Thumb" alt="Ảnh" style="width: 80px; height: 80px; object-fit: cover;" />
+                            </a>
+                        </td>
+                        <td>@item.Product.ProductId</td>
+                        <td>@item.Product.ProductName</td>
+                        <td>
+                            <div>
+                                <del class="text-muted">@String.Format("{0:N0}₫", originalPrice)</del>
+                                <span class="text-danger ms-2 fw-bold">@String.Format("{0:N0}₫", finalPrice)</span>
+                                @if (discountPercent > 0)
+                                {
+                                    <div class="text-success small">Giảm @discountPercent%</div>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control text-center" value="@item.Quantity" readonly />
+                        </td>
+                        <td>@String.Format("{0:N0}₫", itemTotal)</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < Model.Count; i++)
-                    {
-                        var item = Model[i];
-                        int quantity = item.Quantity ?? 0;
-                        decimal originalPrice = item.Product.Price ?? 0;
-                        decimal discountPercent = item.Product.Discount ?? 0;
-                        decimal discountAmount = originalPrice * discountPercent / 100;
-                        decimal finalPrice = originalPrice - discountAmount;
-                        decimal itemTotal = finalPrice * quantity;
-                        totalPrice += itemTotal;
+                }
+            </tbody>
+        </table>
+    </div>
 
-                        <tr>
-                            <td>
-                                <a href="@Url.Action("Details", "Product", new { id = item.ProductId })">
-                                    <img src="@item.Product.Thumb" alt="Ảnh" style="width: 80px; height: 80px; object-fit: cover;" />
-                                </a>
-                            </td>
-                            <td>@item.Product.ProductId</td>
-                            <td>@item.Product.ProductName</td>
-                            <td>
-                                <div>
-                                    <del class="text-muted">@String.Format("{0:N0}₫", originalPrice)</del>
-                                    <span class="text-danger ms-2 fw-bold">@String.Format("{0:N0}₫", finalPrice)</span>
-                                    @if (discountPercent > 0)
-                                    {
-                                        <div class="text-success small">Giảm @discountPercent%</div>
-                                    }
-                                </div>
-                            </td>
-                            <td>
-                                <input type="hidden" name="selectedItems" value="@item.CartItemId" />
-                                <input type="number" name="quantities" class="form-control text-center" value="@item.Quantity" min="1" readonly />
-                            </td>
-                            <td>@String.Format("{0:N0}₫", itemTotal)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+    <h4 class="text-end text-danger mb-4">Tổng tiền: @String.Format("{0:N0}₫", totalPrice)</h4>
 
-        <div class="mt-4">
-            <h4 class="text-end text-danger">Tổng tiền: @String.Format("{0:N0}₫", totalPrice)</h4>
-        </div>
+    <ul class="nav nav-tabs mb-3" id="paymentTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="cod-tab" data-bs-toggle="tab" data-bs-target="#cod" type="button" role="tab">Thanh toán khi nhận hàng</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="momo-tab" data-bs-toggle="tab" data-bs-target="#momo" type="button" role="tab">Mã QR Momo</button>
+        </li>
+    </ul>
 
-        <div class="mt-5">
-            <ul class="nav nav-tabs" id="paymentTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="cod-tab" data-bs-toggle="tab" data-bs-target="#cod" type="button" role="tab">Thanh toán khi nhận hàng</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="momo-tab" data-bs-toggle="tab" data-bs-target="#momo" type="button" role="tab">Mã QR Momo</button>
-                </li>
-            </ul>
-            <div class="tab-pane fade show active" id="cod" role="tabpanel">
-                <p>Bạn sẽ thanh toán khi nhận hàng (COD).</p>
+    <div class="tab-content" id="paymentTabContent">
+
+        <!-- COD -->
+        <div class="tab-pane fade show active" id="cod" role="tabpanel">
+            <form asp-action="Checkout" method="post">
                 <input type="hidden" name="paymentMethod" value="COD" />
-
-                @{
-                    var customer = ViewBag.Customer as webBanThucPham.Models.Customer;
-                    var hasAddress = false;
+                @foreach (var item in Model)
+                {
+                    <input type="hidden" name="selectedItems" value="@item.CartItemId" />
+                    <input type="hidden" name="quantities" value="@item.Quantity" />
                 }
 
                 @if (customer != null)
                 {
-                    var selectedId = customer.Deliveryaddresses.FirstOrDefault()?.DeliveryAddressId ?? 0;
-
                     if (!string.IsNullOrEmpty(customer.Address) && !string.IsNullOrEmpty(customer.Phone))
                     {
                         hasAddress = true;
@@ -129,18 +130,106 @@
                         <a class="btn btn-sm btn-outline-primary ms-2" asp-action="EditInfo" asp-controller="CustomAccount">Cập nhật ngay</a>
                     </div>
                 }
-            </div>
+
+                <div class="mt-4">
+                    <label for="note" class="form-label">Ghi chú đơn hàng (nếu có):</label>
+                    <textarea name="note" id="note" class="form-control" rows="4" placeholder="Nhập ghi chú..."></textarea>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success btn-lg px-5">
+                        <i class="bi bi-credit-card-fill me-2"></i> Thanh toán
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <div class="mt-4">
-            <label for="note" class="form-label">Ghi chú đơn hàng (nếu có):</label>
-            <textarea name="note" id="note" class="form-control" rows="4" placeholder="Nhập ghi chú..."></textarea>
-        </div>
+        <!-- MOMO -->
+        <div class="tab-pane fade" id="momo" role="tabpanel">
+            @{
+                // Tính tổng tiền sau giảm giá
+                decimal totalAmount = 0;
+                foreach (var item in Model)
+                {
+                    decimal price = item.Product.Price ?? 0;
+                    decimal discount = item.Product.Discount ?? 0;
+                    decimal finalPrice = price - (price * discount / 100);
+                    totalAmount += finalPrice * (item.Quantity ?? 0);
+                }
 
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-success btn-lg px-5">
-                <i class="bi bi-credit-card-fill me-2"></i> Thanh toán
-            </button>
+                // ID đơn hàng mới (giả định)
+                int newOrderId = ViewBag.LastOrderId != null ? ((int)ViewBag.LastOrderId + 1) : 1;
+                string fullName = ViewBag.Customer?.FullName ?? "Khách hàng";
+            }
+
+            <form asp-controller="Payment" asp-action="CreatePaymentMomo" method="post">
+                <input type="hidden" name="paymentMethod" value="Momo" />
+                <input type="hidden" name="Amount" value="@totalAmount" />
+                <input type="hidden" name="OrderId" value="@Guid.NewGuid()" />
+                <input type="hidden" name="OrderInfo" value="Thanh toán đơn hàng tại YOUMAK - Mã đơn: @newOrderId" />
+                <input type="hidden" name="FullName" value="@fullName" />
+
+                @foreach (var item in Model)
+                {
+                    <input type="hidden" name="selectedItems" value="@item.CartItemId" />
+                    <input type="hidden" name="quantities" value="@item.Quantity" />
+                }
+
+                @if (customer != null)
+                {
+                    if (!string.IsNullOrEmpty(customer.Address) && !string.IsNullOrEmpty(customer.Phone))
+                    {
+                        hasAddress = true;
+                        <div class="form-check my-3">
+                            <input class="form-check-input" type="radio" name="selectedAddressId" id="defaultAddressMomo" value="0" checked />
+                            <label class="form-check-label" for="defaultAddressMomo">
+                                <strong>Địa chỉ mặc định:</strong><br />
+                                @customer.Address<br />
+                                <strong>SĐT:</strong> @customer.Phone
+                            </label>
+                        </div>
+                    }
+
+                    if (customer.Deliveryaddresses != null && customer.Deliveryaddresses.Any())
+                    {
+                        hasAddress = true;
+                        <div class="mt-3">
+                            <strong>Chọn một trong các địa chỉ đã lưu:</strong>
+                            <div class="list-group">
+                                @foreach (var addr in customer.Deliveryaddresses)
+                                {
+                                    <div class="form-check my-2">
+                                        <input class="form-check-input" type="radio" name="selectedAddressId" id="addrMomo_@addr.DeliveryAddressId" value="@addr.DeliveryAddressId" @(addr.DeliveryAddressId == selectedId && customer.Address == null ? "checked" : "") />
+                                        <label class="form-check-label" for="addrMomo_@addr.DeliveryAddressId">
+                                            <strong>@addr.NameAddress</strong> – @addr.PhoneNumber
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (!hasAddress)
+                {
+                    <div class="alert alert-warning mt-3">
+                        Bạn chưa có địa chỉ giao hàng.
+                        <a class="btn btn-sm btn-outline-primary ms-2" asp-action="EditInfo" asp-controller="CustomAccount">Cập nhật ngay</a>
+                    </div>
+                }
+
+                <div class="mt-4">
+                    <label for="noteMomo" class="form-label">Ghi chú đơn hàng (nếu có):</label>
+                    <textarea name="note" id="noteMomo" class="form-control" rows="4" placeholder="Nhập ghi chú..."></textarea>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-danger btn-lg px-5">
+                        <i class="bi bi-phone"></i> Thanh toán bằng MoMo
+                    </button>
+                </div>
+            </form>
+
         </div>
-    </form>
+    </div>
 </div>
