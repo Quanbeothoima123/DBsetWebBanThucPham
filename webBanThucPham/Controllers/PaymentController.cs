@@ -54,12 +54,18 @@ namespace webBanThucPham.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> PaymentCallback(string orderId, string requestId, string resultCode, string message, string payType, string extraData)
+        public async Task<IActionResult> PaymentCallback(string orderId, string requestId, string errorCode, string message, string payType, string extraData)
         {
+            //var queryString = HttpContext.Request.Query;
+            //Console.WriteLine("MoMo Callback Query String:");
+            //foreach (var param in queryString)
+            //{
+            //    Console.WriteLine($"{param.Key}={param.Value}");
+            //}
             // Kiểm tra nếu thanh toán MoMo không thành công
-            if (resultCode == "0")
+            if (errorCode != "0")
             {
-                TempData["ErrorMessage"] = $"Thanh toán MoMo không thành công: {message}";
+                TempData["ErrorMessage"] = $"Thanh toán MoMo không thành công!";
                 return RedirectToAction("CartView", "Cart");
             }
 

@@ -56,7 +56,7 @@ namespace webBanThucPham.Controllers
             if (string.IsNullOrEmpty(email))
             {
                 TempData["AddToCartError"] = "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng!";
-                return RedirectToAction("Login", "CustomAccount"); // Controller đăng nhập
+                return RedirectToAction("Login", "CustomAccount");
             }
 
             // Tìm khách hàng dựa theo email
@@ -77,7 +77,7 @@ namespace webBanThucPham.Controllers
                     CreatedDate = DateTime.Now
                 };
                 _context.Carts.Add(cart);
-                _context.SaveChanges(); // Đảm bảo cart có CartId mới
+                _context.SaveChanges();
             }
 
             // Kiểm tra sản phẩm đã có trong giỏ chưa
@@ -92,7 +92,7 @@ namespace webBanThucPham.Controllers
                 if (product == null)
                 {
                     TempData["AddToCartError"] = "Sản phẩm không tồn tại!";
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Home"); // Giữ nguyên cho trường hợp lỗi sản phẩm
                 }
 
                 cartItem = new Cartitem
@@ -107,6 +107,15 @@ namespace webBanThucPham.Controllers
 
             _context.SaveChanges();
             TempData["AddToCartSuccess"] = "Đã thêm sản phẩm vào giỏ hàng!";
+
+            // Chuyển hướng về trang gọi action
+            var referrer = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(referrer))
+            {
+                return Redirect(referrer);
+            }
+
+            // Nếu không có referrer, quay về Index/Home (trường hợp dự phòng)
             return RedirectToAction("Index", "Home");
         }
 

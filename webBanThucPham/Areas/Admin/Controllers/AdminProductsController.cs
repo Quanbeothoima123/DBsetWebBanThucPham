@@ -96,6 +96,7 @@ namespace webBanThucPham.Areas.Admin.Controllers
         {
             return Helper.UploadImage.Upload(upload); // Gọi đúng phương thức Upload
         }
+
         // GET: Admin/AdminProducts/Create
         public IActionResult Create()
         {
