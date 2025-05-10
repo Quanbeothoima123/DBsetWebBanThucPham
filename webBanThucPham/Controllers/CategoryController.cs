@@ -40,7 +40,7 @@ namespace webBanThucPham.Controllers
             // Tìm kiếm theo tên sản phẩm
             if (!string.IsNullOrEmpty(search))
             {
-                products = products.Where(p => p.ProductName.Contains(search) || p.Description.Contains(search));
+                products = products.Where(p => p.ProductName.ToLower().Contains(search.ToLower()));
             }
 
             // Lọc sản phẩm giảm giá
@@ -49,24 +49,24 @@ namespace webBanThucPham.Controllers
                 products = products.Where(p => p.Discount > 0);
             }
 
-            // Lọc sản phẩm hot (giả sử có trường isHot trong Products)
+            // Lọc sản phẩm hot
             if (hotProducts == true)
             {
-                products = products.Where(p => p.BestSellers == true); // Cần thêm trường isHot nếu chưa có
+                products = products.Where(p => p.BestSellers == true);
             }
 
-            // Lọc sản phẩm bán chạy (dựa trên Orderdetails)
+            // Lọc sản phẩm bán chạy
             if (topSold == true)
             {
                 var topSoldProductIds = _context.Orderdetails
                     .GroupBy(od => od.ProductId)
                     .OrderByDescending(g => g.Sum(od => od.Quantity))
                     .Select(g => g.Key)
-                    .Take(50); // Lấy top 50 sản phẩm bán chạy
+                    .Take(50);
                 products = products.Where(p => topSoldProductIds.Contains(p.ProductId));
             }
 
-            // Lọc sản phẩm mới (trong 30 ngày gần nhất)
+            // Lọc sản phẩm mới
             if (newProducts == true)
             {
                 var recentDate = DateTime.Now.AddDays(-30);
@@ -86,9 +86,9 @@ namespace webBanThucPham.Controllers
             // Sắp xếp sản phẩm
             products = sortOrder switch
             {
-                2 => products.OrderByDescending(p => p.Price), // Giá cao -> thấp
-                3 => products.OrderBy(p => p.Price), // Giá thấp -> cao
-                _ => products.OrderByDescending(p => p.DateCreated), // Mặc định: mới nhất
+                2 => products.OrderByDescending(p => p.Price),
+                3 => products.OrderBy(p => p.Price),
+                _ => products.OrderByDescending(p => p.DateCreated),
             };
 
             // Phân trang
@@ -107,6 +107,38 @@ namespace webBanThucPham.Controllers
             ViewBag.TotalCount = products.Count();
 
             return View(pagedProducts);
+        }
+
+        [HttpGet]
+        public IActionResult SearchSuggestions(string query, int? catId)
+        {
+            if (string.IsNullOrEmpty(query) || query.Length < 2)
+            {
+                return Json(new List<object>());
+            }
+
+            var products = _context.Products
+                .Where(p => p.Active == true && p.ProductName.ToLower().Contains(query.ToLower()))
+                .AsQueryable();
+
+            // Lọc theo danh mục nếu có
+            if (catId.HasValue && catId != 0)
+            {
+                products = products.Where(p => p.CatId == catId);
+            }
+
+            // Lấy tối đa 10 sản phẩm
+            var suggestions = products
+                .Select(p => new
+                {
+                    productId = p.ProductId,
+                    productName = p.ProductName,
+                    thumb = p.Thumb ?? "/images/default-product.jpg"
+                })
+                .Take(10)
+                .ToList();
+
+            return Json(suggestions);
         }
     }
 }
