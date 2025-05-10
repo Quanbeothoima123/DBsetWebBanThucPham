@@ -47,11 +47,36 @@
                             <img src="~/assets/images/logo/logo.png" alt="Header Logo">
                         </a>
                         <div class="header-search-area d-none d-lg-block">
-                            <form action="#" class="header-searchbox">
-                                <select class="nice-select select-search-category wide">
-                                    <option value="all">Danh mục sản phẩm</option>
+                            @inject webBanThucPham.Models.DbBanThucPhamContext _context
+                            <form action="@Url.Action("Index", "Category")" class="header-searchbox" method="get" id="headerSearchForm">
+                                <select class="form-select select-search-category wide" name="catId" onchange="document.getElementById('headerSearchForm').submit()">
+                                    @if (ViewBag.SelectedCatId == null || ViewBag.SelectedCatId == 0)
+                                    {
+                                        <option value="0" selected>Tất cả danh mục</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="0">Tất cả danh mục</option>
+                                    }
+                                    @{
+                                        var categories = _context.Categories
+                                        .Where(c => c.Published == true)
+                                        .OrderBy(c => c.CatId)
+                                        .ToList();
+                                        foreach (var category in categories)
+                                        {
+                                            @if (ViewBag.SelectedCatId == category.CatId)
+                                            {
+                                                <option value="@category.CatId" selected>@category.CatName</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@category.CatId">@category.CatName</option>
+                                            }
+                                        }
+                                    }
                                 </select>
-                                <input class="input-field" type="text" placeholder="Tìm kiếm sản phẩm">
+                                <input class="input-field" type="text" name="search" placeholder="Tìm kiếm sản phẩm" value="@ViewBag.Search">
                                 <button class="btn btn-outline-whisper btn-primary-hover" type="submit"><i class="pe-7s-search"></i></button>
                             </form>
                         </div>
@@ -225,46 +250,46 @@
                     <nav class="offcanvas-navigation">
                         <ul class="mobile-menu">
                             <li class="menu-item-has-children">
-                                <a href="/">
+                                <a asp-controller="Home" asp-action="Index">
                                     <span class="mm-text">
-                                        Home                                 
+                                        Trang chủ                                 
                                     </span>
                                 </a>
                             </li>
                             <li>
-                                <a href="about.html">
+                                <a asp-controller="Home" asp-action="About">
                                     <span class="mm-text">Về chúng tôi</span>
                                 </a>
                             </li>
                             <li class="menu-item-has-children">
-                                <a href="#">
+                                <a asp-controller="Product" asp-action="Index">
                                     <span class="mm-text">
-                                        Shop
+                                        Sản phẩm
                                         <i class="pe-7s-angle-down"></i>
                                     </span>
                                 </a>
                                 
                             </li>
                             <li class="menu-item-has-children">
-                                <a href="#">
+                                <a asp-controller="Page" asp-action="Index">
                                     <span class="mm-text">
-                                        Pages
+                                        Hướng dẫn mua hàng
                                         <i class="pe-7s-angle-down"></i>
                                     </span>
                                 </a>
                             </li>
                             <li class="menu-item-has-children">
-                                <a href="#">
+                                <a asp-controller="Blog" asp-action="Index">
                                     <span class="mm-text">
-                                        Blog
+                                        Tin tức
                                         <i class="pe-7s-angle-down"></i>
                                     </span>
                                 </a>
                                 
                             </li>
                             <li>
-                                <a href="contact.html">
-                                    <span class="mm-text">Contact</span>
+                                <a asp-controller="Home" asp-action="Contact">
+                                    <span class="mm-text">Liên hệ</span>
                                 </a>
                             </li>
                         </ul>
